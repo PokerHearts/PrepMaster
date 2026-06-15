@@ -1936,6 +1936,10 @@
       </select>
     </div>
     <div class="form-group">
+      <label for="modal-api-key-input">API Key (session storage):</label>
+      <input type="password" id="modal-api-key-input" class="form-control" placeholder="Paste your API Key here">
+    </div>
+    <div class="form-group">
       <label for="settings-endpoint">API Endpoint URL:</label>
       <input type="url" id="settings-endpoint" class="form-control" placeholder="e.g. https://api.openai.com/v1/chat/completions">
     </div>
@@ -2162,6 +2166,11 @@
       const keyInput = document.getElementById('api-key-input');
       keyInput.placeholder = preset.placeholder;
       
+      const modalKeyInput = document.getElementById('modal-api-key-input');
+      if (modalKeyInput) {
+        modalKeyInput.placeholder = preset.placeholder;
+      }
+      
       const warningEl = document.getElementById('api-security-warning');
       if (warningEl) {
         warningEl.textContent = preset.info;
@@ -2208,7 +2217,14 @@
     function loadApiSettings() {
       const storedKey = getApiKey();
       const input = document.getElementById('api-key-input');
-      input.value = storedKey;
+      if (input) {
+        input.value = storedKey;
+      }
+      
+      const modalInput = document.getElementById('modal-api-key-input');
+      if (modalInput) {
+        modalInput.value = storedKey;
+      }
       
       const savedPrefs = localStorage.getItem('prepmaster_preferences');
       if (savedPrefs) {
@@ -2256,19 +2272,42 @@
       document.getElementById('settings-headers').value = preferences.customHeaders || '';
       document.getElementById('settings-auth-header').value = preferences.authHeaderName || 'Authorization';
       document.getElementById('settings-auth-prefix').value = preferences.authHeaderPrefix !== undefined ? preferences.authHeaderPrefix : 'Bearer ';
+      
+      const modalKeyInput = document.getElementById('modal-api-key-input');
+      if (modalKeyInput) {
+        modalKeyInput.value = getApiKey() || '';
+      }
+      
       dialog.showModal();
     }
 
     function initButtonListeners() {
       // API Settings events
       const keyInput = document.getElementById('api-key-input');
+      const modalKeyInput = document.getElementById('modal-api-key-input');
+
       keyInput.addEventListener('input', (e) => {
-        setApiKey(e.target.value.trim());
+        const val = e.target.value.trim();
+        setApiKey(val);
+        if (modalKeyInput) {
+          modalKeyInput.value = val;
+        }
       });
+
+      if (modalKeyInput) {
+        modalKeyInput.addEventListener('input', (e) => {
+          const val = e.target.value.trim();
+          setApiKey(val);
+          keyInput.value = val;
+        });
+      }
 
       document.getElementById('clear-key-btn').addEventListener('click', () => {
         setApiKey('');
-        keyInput.value = '';
+        if (keyInput) keyInput.value = '';
+        if (modalKeyInput) {
+          modalKeyInput.value = '';
+        }
         showToast('API Key cleared successfully.', 'success');
       });
 
@@ -2350,6 +2389,16 @@
         preferences.customHeaders = document.getElementById('settings-headers').value.trim();
         preferences.authHeaderName = document.getElementById('settings-auth-header').value.trim() || 'Authorization';
         preferences.authHeaderPrefix = document.getElementById('settings-auth-prefix').value;
+        
+        const modalKeyInput = document.getElementById('modal-api-key-input');
+        if (modalKeyInput) {
+          const val = modalKeyInput.value.trim();
+          setApiKey(val);
+          const keyInput = document.getElementById('api-key-input');
+          if (keyInput) {
+            keyInput.value = val;
+          }
+        }
         
         savePreferences();
         refreshUIForPreset(preferences.preset, true);
@@ -2948,7 +2997,7 @@
     async function handleAIGenerateExam() {
       const apiKey = getApiKey();
       if (!apiKey) {
-        showToast("🔒 API key required. Please enter an API key in the settings bar at the top of the page.", "error");
+        showToast("🔒 API key required. Please enter an API key in the configuration modal or settings bar.", "error");
         openSettingsModal();
         return;
       }
@@ -3126,7 +3175,7 @@ Ensure questions are exam-appropriate, accurate, and have options starting with 
     async function handleAutoSolveWithAI() {
       const apiKey = getApiKey();
       if (!apiKey) {
-        showToast("🔒 API key required. Please enter an API key in the settings bar at the top of the page.", "error");
+        showToast("🔒 API key required. Please enter an API key in the configuration modal or settings bar.", "error");
         openSettingsModal();
         return;
       }
@@ -3823,7 +3872,7 @@ Which option is correct, and why? Provide a JSON response: {"correctAnswer": "${
 
       const apiKey = getApiKey();
       if (!apiKey) {
-        showToast("🔒 API key required. Please enter an API key in the settings bar at the top of the page to flip the question.", "error");
+        showToast("🔒 API key required. Please enter an API key in the configuration modal or settings bar to flip the question.", "error");
         openSettingsModal();
         return;
       }
@@ -4463,7 +4512,7 @@ Output ONLY the JSON object. Do not include markdown formatting like \`\`\`json.
       if (!apiKey) {
         body.innerHTML = `
           <div class="alert alert-warning" style="margin-bottom:0;">
-            🔒 API key required. Please enter an API key in the settings bar at the top of the page.
+            🔒 API key required. Please configure it in the settings modal or at the top of the page.
           </div>
         `;
         return;
@@ -4709,16 +4758,6 @@ Output ONLY the JSON object. Do not include markdown formatting like \`\`\`json.
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    function openSettingsModal() {
-      const dialog = document.getElementById('exam-config-dialog');
-      // Set to active dialog values
-      document.getElementById('config-pass-percent').value = preferences.passPercent;
-      document.getElementById('settings-preset').value = preferences.preset;
-      document.getElementById('settings-endpoint').value = preferences.apiEndpoint;
-      document.getElementById('settings-prompt').value = preferences.systemPrompt;
-      dialog.showModal();
-    }
-    
     // Close settings modal
     document.getElementById('config-close-btn').addEventListener('click', () => {
       document.getElementById('exam-config-dialog').close();
