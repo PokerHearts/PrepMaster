@@ -2619,13 +2619,14 @@ CRITICAL INSTRUCTIONS:
 - The difficulty level MUST be exactly: ${difficulty.toUpperCase()}.
 - The questions MUST strictly cover ONLY the requested subject/topic/chapters. DO NOT generate questions out of syllabus.
 - Every question MUST have EXACTLY ONE unequivocally correct answer. The three incorrect options (distractors) MUST be highly plausible, challenging, and represent common misconceptions or calculation errors to test deep understanding. However, they must be definitively incorrect so no two options can be argued as right.
+- The correct answer MUST be randomly distributed across options A, B, C, and D. Do NOT make 'A' the correct answer for every question.
 - Format exactly as a valid JSON array:
 [
   {
     "questionNumber": ${startNumber},
     "questionText": "...",
     "options": ["A) ...", "B) ...", "C) ...", "D) ..."],
-    "correctAnswer": "A",
+    "correctAnswer": "<random letter A, B, C, or D>",
     "explanation": "..."
   }
 ]
@@ -4124,12 +4125,13 @@ CRITICAL INSTRUCTIONS:
 - The difficulty level MUST be exactly: ${difficulty.toUpperCase()}.
 - The question MUST strictly cover ONLY the requested subject/topic/chapters. DO NOT generate out of syllabus questions.
 - The question MUST have EXACTLY ONE unequivocally correct answer. The three incorrect options (distractors) MUST be highly plausible, challenging, and represent common misconceptions or calculation errors. However, they must be definitively incorrect so no two options can be argued as right.
+- The correct answer MUST be randomly placed among A, B, C, and D. Do NOT always make it A.
 - Output MUST be exactly one valid JSON object in this format:
 {
   "questionNumber": ${startNumber},
   "questionText": "...",
   "options": ["A) ...", "B) ...", "C) ...", "D) ..."],
-  "correctAnswer": "A",
+  "correctAnswer": "<random letter A, B, C, or D>",
   "explanation": "..."
 }
 Ensure the question is accurate and options start with A), B), C), D). Output ONLY the JSON object.`;
