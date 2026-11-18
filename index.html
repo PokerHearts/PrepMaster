@@ -2299,6 +2299,10 @@
               <div class="val" style="color: var(--text-primary); font-size: 1.1rem;" id="results-val-marks">0 / 0</div>
               <div class="lbl" id="results-lbl-marks">Net Score</div>
             </div>
+            <div class="results-stat-box" style="grid-column: span 2;">
+              <div class="val" style="color: var(--accent-color); font-size: 1.05rem;" id="results-val-attempted-score">0 / 0 (0%)</div>
+              <div class="lbl" id="results-lbl-attempted-score">Attempted Only (0 attempted)</div>
+            </div>
           </div>
 
           <div class="mt-4" style="font-size: 0.85rem; color: var(--text-secondary);" id="results-time-spent">
@@ -2321,6 +2325,7 @@
             <div style="display: flex; gap: 12px; flex-wrap: wrap;">
               <select id="results-filter" class="form-control" style="width: auto; padding: 6px 12px; font-size: 0.85rem;" aria-label="Filter answers">
                 <option value="all">Show All</option>
+                <option value="attempted">Show Attempted Only</option>
                 <option value="incorrect">Show Wrong Only</option>
                 <option value="correct">Show Correct Only</option>
                 <option value="skipped">Show Skipped Only</option>
@@ -5874,6 +5879,15 @@ Ensure the question is accurate and options start with A), B), C), D). Output ON
         ? `Net Score (−${fmtNum(negativeDeducted)} negative)`
         : scheme.label;
 
+      const attemptedMaxMarks = attempted * scheme.correct;
+      const attemptedPercent = attemptedMaxMarks > 0 ? Math.max(0, Math.round((netMarks / attemptedMaxMarks) * 100)) : 0;
+      document.getElementById('results-val-attempted-score').textContent = attempted > 0
+        ? `${fmtNum(netMarks)} / ${fmtNum(attemptedMaxMarks)} (${attemptedPercent}%)`
+        : '0 / 0 (0%)';
+      document.getElementById('results-lbl-attempted-score').textContent = attempted > 0
+        ? `Attempted Only (${correct}/${attempted} correct)`
+        : 'Attempted Only (0 attempted)';
+
       // Time taken calculation
       const elapsedSecs = Math.max(0, Math.round((examEndTime - examStartTime) / 1000));
       const mins = Math.floor(elapsedSecs / 60);
@@ -5928,7 +5942,11 @@ Ensure the question is accurate and options start with A), B), C), D). Output ON
         }
 
         // Filter checks
-        if (filter !== 'all' && filter !== status) return;
+        if (filter === 'attempted') {
+          if (status === 'skipped') return;
+        } else if (filter !== 'all' && filter !== status) {
+          return;
+        }
 
         const card = document.createElement('div');
         card.className = `review-card ${status}-card`;
