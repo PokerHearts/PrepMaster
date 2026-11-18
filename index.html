@@ -1361,19 +1361,6 @@
       border-top: var(--card-border);
     }
 
-    .scroll-exam-container {
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
-    }
-
-    .scroll-q-card {
-      background: var(--bg-card);
-      border: var(--card-border);
-      border-radius: 16px;
-      padding: 24px;
-    }
-
     /* Results Dashboard */
     .results-grid {
       display: grid;
@@ -1956,20 +1943,12 @@
             </div>
           </div>
           <div class="form-group">
-            <label for="exam-layout-val">Navigation Layout Preference:</label>
-            <select id="exam-layout-val" class="form-control">
-              <option value="slider">One Question at a Time (Slider)</option>
-              <option value="scroll">Scrollable List (All on screen)</option>
-            </select>
-          </div>
-          <div class="form-group" style="grid-column: 1 / -1;">
-            <label for="exam-marking-scheme">Marking Scheme (Negative Marking):</label>
+            <label for="exam-marking-scheme">Marking Scheme (Positive / Negative):</label>
             <select id="exam-marking-scheme" class="form-control">
-              <option value="none">No Negative Marking (+1 correct / 0 wrong)</option>
-              <option value="ibps">+1 correct / −0.25 wrong (1/4th negative)</option>
-              <option value="ssc">+2 correct / −0.50 wrong (1/4th negative)</option>
-              <option value="rrb">+1 correct / −0.33 wrong (1/3rd negative)</option>
-              <option value="upsc">+2.5 correct / −0.83 wrong (1/3rd negative)</option>
+              <option value="1_0">+1 / 0 (No Negative)</option>
+              <option value="2_1">+2 / −1</option>
+              <option value="3_1">+3 / −1</option>
+              <option value="4_1">+4 / −1</option>
             </select>
           </div>
         </div>
@@ -2092,9 +2071,6 @@
               <span><kbd>F</kbd> Flag</span>
             </div>
           </div>
-
-          <!-- Scrollable view container -->
-          <div id="exam-scroll-container" class="scroll-exam-container hidden"></div>
         </div>
       </div>
     </section>
@@ -2192,6 +2168,20 @@
     <div class="dialog-footer">
       <button type="button" id="confirm-submit-cancel" class="btn btn-secondary" autofocus>Go Back</button>
       <button type="button" id="confirm-submit-proceed" class="btn btn-danger">Submit Exam</button>
+    </div>
+  </dialog>
+
+  <!-- DIALOG: CANCEL EXAM -->
+  <dialog id="cancel-exam-dialog" closedby="none" aria-labelledby="cancel-exam-title">
+    <div class="dialog-header">
+      <h2 id="cancel-exam-title" class="dialog-title">Cancel Exam?</h2>
+    </div>
+    <div>
+      <p id="cancel-exam-msg">Do you want to cancel exam?</p>
+    </div>
+    <div class="dialog-footer">
+      <button type="button" id="cancel-exam-no-btn" class="btn btn-primary" autofocus>No</button>
+      <button type="button" id="cancel-exam-yes-btn" class="btn btn-danger">Yes</button>
     </div>
   </dialog>
 
@@ -2321,14 +2311,18 @@
     let flaggedQuestions = new Set(); // Set of flagged qNums
     let questionTimeSpent = {}; // { qNum: seconds }
 
-    // Negative Marking Presets (configured on Review screen)
+    // Marking Schemes (Positive / Negative)
     const MARKING_SCHEMES = {
-      none: { label: 'No Negative Marking', correct: 1, wrong: 0 },
-      ibps: { label: 'IBPS / SBI / RBI (+1 / −0.25)', correct: 1, wrong: 0.25 },
-      ssc:  { label: 'SSC CGL / CHSL (+2 / −0.50)', correct: 2, wrong: 0.5 },
-      rrb:  { label: 'RRB NTPC (+1 / −0.33)', correct: 1, wrong: 1 / 3 },
-      upsc: { label: 'UPSC CSAT (+2.5 / −0.83)', correct: 2.5, wrong: 2.5 / 3 }
+      '1_0': { label: '+1 / 0', correct: 1, wrong: 0 },
+      '2_1': { label: '+2 / −1', correct: 2, wrong: 1 },
+      '3_1': { label: '+3 / −1', correct: 3, wrong: 1 },
+      '4_1': { label: '+4 / −1', correct: 4, wrong: 1 }
     };
+
+    // Exam Window Lock state
+    let examLockActive = false;
+    let isIntentionalExamExit = false;
+    let wasInFullscreen = false;
     
     // Exam parameters
     let currentQuestionIdx = 0;
@@ -2592,6 +2586,7 @@
       initDialogLightDismissFallback();
       initAccessibleFormValidation();
       initExamKeyboardShortcuts();
+      initExamWindowLock();
       initButtonListeners();
       renderSavedSetsList();
       checkSavedState();
@@ -3254,9 +3249,6 @@
         const tag = (e.target?.tagName || '').toLowerCase();
         if (tag === 'input' || tag === 'textarea' || tag === 'select' || e.metaKey || e.ctrlKey || e.altKey) return;
 
-        const layout = document.getElementById('exam-layout-val')?.value || 'slider';
-        if (layout !== 'slider') return;
-
         const key = e.key.toLowerCase();
         if (key === 'arrowleft') {
           e.preventDefault();
@@ -3281,6 +3273,123 @@
               updateExamProgress();
             }
           }
+        }
+      });
+    }
+
+    function setExamWindowLock(active) {
+      if (active) {
+        examLockActive = true;
+        isIntentionalExamExit = false;
+        wasInFullscreen = !!document.fullscreenElement;
+        toggleFullscreen(true);
+      } else {
+        examLockActive = false;
+        isIntentionalExamExit = true;
+        wasInFullscreen = false;
+        if (navigator.keyboard && typeof navigator.keyboard.unlock === 'function') {
+          try { navigator.keyboard.unlock(); } catch (e) {}
+        }
+        const cancelDialog = document.getElementById('cancel-exam-dialog');
+        if (cancelDialog && cancelDialog.open) {
+          cancelDialog.close();
+        }
+        toggleFullscreen(false);
+        setTimeout(() => { isIntentionalExamExit = false; }, 300);
+      }
+    }
+
+    function promptCancelExamModal() {
+      if (!examLockActive || isIntentionalExamExit) return;
+      const submitDialog = document.getElementById('confirm-submit-dialog');
+      if (submitDialog && submitDialog.open) return;
+      const cancelDialog = document.getElementById('cancel-exam-dialog');
+      if (cancelDialog && !cancelDialog.open) {
+        cancelDialog.showModal();
+      }
+    }
+
+    function initExamWindowLock() {
+      const cancelDialog = document.getElementById('cancel-exam-dialog');
+      const noBtn = document.getElementById('cancel-exam-no-btn');
+      const yesBtn = document.getElementById('cancel-exam-yes-btn');
+
+      // Block Escape key during active exam (capture phase)
+      document.addEventListener('keydown', (e) => {
+        if (!examLockActive) return;
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+        }
+      }, true);
+
+      // Prevent Escape / cancel event from dismissing the cancel-exam dialog (Safari fallback for closedby="none")
+      if (cancelDialog) {
+        cancelDialog.addEventListener('cancel', (e) => {
+          e.preventDefault();
+        });
+      }
+
+      if (noBtn) {
+        noBtn.addEventListener('click', () => {
+          if (cancelDialog && cancelDialog.open) cancelDialog.close();
+          if (examLockActive) {
+            toggleFullscreen(true);
+          }
+        });
+      }
+
+      if (yesBtn) {
+        yesBtn.addEventListener('click', () => {
+          setExamWindowLock(false);
+          handleRestartExam();
+        });
+      }
+
+      // Fullscreen lock & exit detection
+      document.addEventListener('fullscreenchange', () => {
+        if (document.fullscreenElement) {
+          wasInFullscreen = true;
+          if (examLockActive && navigator.keyboard && typeof navigator.keyboard.lock === 'function') {
+            navigator.keyboard.lock(['Escape']).catch(() => {});
+          }
+        } else if (wasInFullscreen && examLockActive && !isIntentionalExamExit) {
+          wasInFullscreen = false;
+          promptCancelExamModal();
+        }
+      });
+
+      // Tab switch / minimize detection
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden && examLockActive && !isIntentionalExamExit) {
+          promptCancelExamModal();
+        }
+      });
+
+      // Window focus loss (Alt+Tab, clicking outside browser window, etc.)
+      window.addEventListener('blur', () => {
+        if (!examLockActive || isIntentionalExamExit) return;
+        setTimeout(() => {
+          if (examLockActive && !isIntentionalExamExit && !document.hasFocus()) {
+            promptCancelExamModal();
+          }
+        }, 50);
+      });
+
+      // Pointer leaving viewport bounds (moving toward OS window controls / tabs)
+      document.documentElement.addEventListener('mouseleave', (e) => {
+        if (!examLockActive || isIntentionalExamExit) return;
+        if (e.clientY <= 0 || e.clientX <= 0 || e.clientX >= window.innerWidth || e.clientY >= window.innerHeight) {
+          promptCancelExamModal();
+        }
+      });
+
+      // Tab close / reload guard
+      window.addEventListener('beforeunload', (e) => {
+        if (examLockActive && !isIntentionalExamExit) {
+          e.preventDefault();
+          e.returnValue = '';
         }
       });
     }
@@ -3825,13 +3934,6 @@ Output ONLY the valid JSON array.`;
     }
 
     function getContinuousProgressIndex() {
-      const layout = document.getElementById('exam-layout-val')?.value || 'slider';
-      if (layout === 'scroll') {
-        const answeredIndices = questions
-          .map((q, i) => (userSelections[q.questionNumber] ? i : -1))
-          .filter(i => i >= 0);
-        return answeredIndices.length ? Math.max(...answeredIndices) : 0;
-      }
       return currentQuestionIdx;
     }
 
@@ -3855,10 +3957,7 @@ Output ONLY the valid JSON array.`;
       continuousGenerating = false;
       updateContinuousUI();
       if (document.getElementById('exam-view')?.classList.contains('active')) {
-        const layout = document.getElementById('exam-layout-val')?.value || 'slider';
-        if (layout === 'slider') {
-          renderSliderQuestion();
-        }
+        renderSliderQuestion();
       }
       if (!silent) {
         showToast('Continuous generation stopped. You can finish the exam with current questions.', 'info');
@@ -3906,13 +4005,7 @@ Output ONLY the valid JSON array.`;
         questions.push(...newQuestions);
         continuousBatchNumber = nextBatchNum;
 
-        const layout = document.getElementById('exam-layout-val').value;
-        if (layout === 'slider') {
-          renderSliderQuestion();
-        } else {
-          renderScrollQuestions();
-        }
-
+        renderSliderQuestion();
         buildExamNavGrid();
         updateExamProgress();
         saveActiveExamState(true);
@@ -3930,12 +4023,7 @@ Output ONLY the valid JSON array.`;
         continuousAbortController = null;
         updateContinuousUI();
         if (document.getElementById('exam-view')?.classList.contains('active')) {
-          const layout = document.getElementById('exam-layout-val').value;
-          if (layout === 'slider') {
-            renderSliderQuestion();
-          } else {
-            renderScrollQuestions();
-          }
+          renderSliderQuestion();
         }
       }
     }
@@ -4662,18 +4750,10 @@ ${questionListText}`;
       // Start AutoSave timer
       startAutoSaveLoop();
       
-      // Initialize view structures
-      const layout = document.getElementById('exam-layout-val').value;
-      if (layout === 'slider') {
-        document.getElementById('exam-slider-container').classList.remove('hidden');
-        document.getElementById('exam-scroll-container').classList.add('hidden');
-        renderSliderQuestion();
-        initSwipeGestures();
-      } else {
-        document.getElementById('exam-slider-container').classList.add('hidden');
-        document.getElementById('exam-scroll-container').classList.remove('hidden');
-        renderScrollQuestions();
-      }
+      // Initialize view structures (one question at a time)
+      document.getElementById('exam-slider-container').classList.remove('hidden');
+      renderSliderQuestion();
+      initSwipeGestures();
 
       buildExamNavGrid();
       updateExamProgress();
@@ -4685,7 +4765,7 @@ ${questionListText}`;
       }
 
       switchView('preview-view', 'exam-view');
-      toggleFullscreen(true);
+      setExamWindowLock(true);
     }
 
     function startExamTimer() {
@@ -4729,9 +4809,8 @@ ${questionListText}`;
 
       timerInterval = setInterval(() => {
         if (!isTimerPaused) {
-          // Track per-question time in slider mode
-          const layout = document.getElementById('exam-layout-val')?.value || 'slider';
-          if (layout === 'slider' && questions[currentQuestionIdx]) {
+          // Track per-question time
+          if (questions[currentQuestionIdx]) {
             const curNum = questions[currentQuestionIdx].questionNumber;
             questionTimeSpent[curNum] = (questionTimeSpent[curNum] || 0) + 1;
             const qBadge = document.getElementById('exam-q-time-badge');
@@ -4826,12 +4905,7 @@ ${questionListText}`;
       updateLifelineButtons();
       
       // Re-render current question
-      const layout = document.getElementById('exam-layout-val').value;
-      if (layout === 'slider') {
-        renderSliderQuestion();
-      } else {
-        renderScrollQuestions();
-      }
+      renderSliderQuestion();
       
       showToast("🌓 50-50 Activated! Two incorrect options removed.", "success");
       saveActiveExamState();
@@ -5027,12 +5101,7 @@ Ensure the question is accurate and options start with A), B), C), D). Output ON
         stack.innerHTML = originalStackHtml;
       } finally {
         // Re-render
-        const layout = document.getElementById('exam-layout-val').value;
-        if (layout === 'slider') {
-          renderSliderQuestion();
-        } else {
-          renderScrollQuestions();
-        }
+        renderSliderQuestion();
         buildExamNavGrid();
         updateExamProgress();
         saveActiveExamState();
@@ -5055,11 +5124,10 @@ Ensure the question is accurate and options start with A), B), C), D). Output ON
         userSelections,
         flaggedQuestions: Array.from(flaggedQuestions),
         questionTimeSpent,
-        markingScheme: document.getElementById('exam-marking-scheme')?.value || 'none',
+        markingScheme: document.getElementById('exam-marking-scheme')?.value || '1_0',
         secondsRemaining,
         totalExamSeconds,
         examStartTime,
-        displayPref: document.getElementById('exam-layout-val').value,
         lifelinesUsed,
         questionHiddenOptions,
         continuousMode,
@@ -5092,8 +5160,9 @@ Ensure the question is accurate and options start with A), B), C), D). Output ON
         userSelections = state.userSelections;
         flaggedQuestions = new Set(state.flaggedQuestions);
         questionTimeSpent = state.questionTimeSpent || {};
-        if (state.markingScheme && document.getElementById('exam-marking-scheme')) {
-          document.getElementById('exam-marking-scheme').value = state.markingScheme;
+        if (document.getElementById('exam-marking-scheme')) {
+          document.getElementById('exam-marking-scheme').value =
+            (state.markingScheme && MARKING_SCHEMES[state.markingScheme]) ? state.markingScheme : '1_0';
         }
         secondsRemaining = state.secondsRemaining;
         totalExamSeconds = state.totalExamSeconds;
@@ -5113,27 +5182,18 @@ Ensure the question is accurate and options start with A), B), C), D). Output ON
         updateLifelineButtons();
         updateContinuousUI();
         
-        document.getElementById('exam-layout-val').value = state.displayPref;
-        
         startAutoSaveLoop();
         
-        if (state.displayPref === 'slider') {
-          document.getElementById('exam-slider-container').classList.remove('hidden');
-          document.getElementById('exam-scroll-container').classList.add('hidden');
-          renderSliderQuestion();
-          initSwipeGestures();
-        } else {
-          document.getElementById('exam-slider-container').classList.add('hidden');
-          document.getElementById('exam-scroll-container').classList.remove('hidden');
-          renderScrollQuestions();
-        }
+        document.getElementById('exam-slider-container').classList.remove('hidden');
+        renderSliderQuestion();
+        initSwipeGestures();
 
         buildExamNavGrid();
         updateExamProgress();
         startExamTimer();
 
         switchView('setup-view', 'exam-view');
-        toggleFullscreen(true);
+        setExamWindowLock(true);
         showToast("Active exam session restored successfully.", "success");
       } catch (err) {
         showToast("Failed to restore session.", "error");
@@ -5150,7 +5210,6 @@ Ensure the question is accurate and options start with A), B), C), D). Output ON
     function buildExamNavGrid() {
       const grid = document.getElementById('exam-nav-grid');
       grid.innerHTML = '';
-      const displayPref = document.getElementById('exam-layout-val').value;
 
       questions.forEach((q, idx) => {
         const cell = document.createElement('div');
@@ -5158,23 +5217,14 @@ Ensure the question is accurate and options start with A), B), C), D). Output ON
         cell.textContent = q.questionNumber;
         
         // Sync states
-        if (displayPref === 'slider' && idx === currentQuestionIdx) cell.classList.add('current');
+        if (idx === currentQuestionIdx) cell.classList.add('current');
         if (userSelections[q.questionNumber]) cell.classList.add('answered');
         if (flaggedQuestions.has(q.questionNumber)) cell.classList.add('flagged');
 
         cell.addEventListener('click', () => {
-          if (displayPref === 'slider') {
-            currentQuestionIdx = idx;
-            renderSliderQuestion();
-            buildExamNavGrid();
-          } else {
-            const card = document.getElementById(`scroll-q-${q.questionNumber}`);
-            if (card) {
-              card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              card.style.borderColor = 'var(--accent-color)';
-              setTimeout(() => card.style.borderColor = 'var(--card-border)', 1500);
-            }
-          }
+          currentQuestionIdx = idx;
+          renderSliderQuestion();
+          buildExamNavGrid();
         });
         grid.appendChild(cell);
       });
@@ -5263,81 +5313,6 @@ Ensure the question is accurate and options start with A), B), C), D). Output ON
         nextBtn.disabled = false;
         nextBtn.innerHTML = `Next <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>`;
       }
-    }
-
-    // Render Scroll Mode questions
-    function renderScrollQuestions() {
-      const container = document.getElementById('exam-scroll-container');
-      container.innerHTML = '';
- 
-      questions.forEach((q, idx) => {
-        const card = document.createElement('div');
-        card.className = 'scroll-q-card';
-        card.id = `scroll-q-${q.questionNumber}`;
- 
-        const hiddenOpts = questionHiddenOptions[idx] || [];
- 
-        let optionsMarkup = '';
-        Object.entries(q.options || {}).forEach(([letter, text]) => {
-          const selected = userSelections[q.questionNumber] === letter ? 'selected' : '';
-          const isHidden = hiddenOpts.includes(letter) ? 'style="visibility: hidden; pointer-events: none;"' : '';
-          optionsMarkup += `
-            <div class="option-card ${selected}" data-letter="${letter}" ${isHidden}>
-              <div class="option-letter">${letter}</div>
-              <div class="option-text">${escapeHTML(text)}</div>
-            </div>
-          `;
-        });
- 
-        const flagged = flaggedQuestions.has(q.questionNumber) ? 'active' : '';
-        const flagText = flaggedQuestions.has(q.questionNumber) ? 'Flagged' : 'Flag for Review';
-        const sourceInfo = q.sourcePaper ? ` (${escapeHTML(q.sourcePaper)})` : '';
- 
-        card.innerHTML = `
-          <div class="question-header-row">
-            <div class="question-number-badge">Question ${q.questionNumber}${sourceInfo}</div>
-            <button class="flag-btn ${flagged}" data-qnum="${q.questionNumber}">
-              <svg viewBox="0 0 24 24">
-                <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>
-              </svg>
-              <span>${flagText}</span>
-            </button>
-          </div>
-          
-          <div class="question-body-text">${formatQuestionHTML(q.questionText)}</div>
-          <div class="options-stack">${optionsMarkup}</div>
-        `;
-
-        // Selection hook
-        card.querySelectorAll('.option-card').forEach(optEl => {
-          optEl.addEventListener('click', () => {
-            const letter = optEl.dataset.letter;
-            userSelections[q.questionNumber] = letter;
-            card.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
-            optEl.classList.add('selected');
-            updateExamProgress();
-            buildExamNavGrid();
-          });
-        });
-
-        // Flag hook
-        card.querySelector('.flag-btn').addEventListener('click', (e) => {
-          const btn = e.currentTarget;
-          const qNum = parseInt(btn.dataset.qnum, 10);
-          if (flaggedQuestions.has(qNum)) {
-            flaggedQuestions.delete(qNum);
-            btn.classList.remove('active');
-            btn.querySelector('span').textContent = 'Flag for Review';
-          } else {
-            flaggedQuestions.add(qNum);
-            btn.classList.add('active');
-            btn.querySelector('span').textContent = 'Flagged';
-          }
-          buildExamNavGrid();
-        });
-
-        container.appendChild(card);
-      });
     }
 
     // Touch Swipe Gestures for Mobile Slider
@@ -5438,7 +5413,7 @@ Ensure the question is accurate and options start with A), B), C), D). Output ON
       localStorage.removeItem('exam_saved_state'); // Clear active session state
       
       document.getElementById('confirm-submit-dialog').close();
-      toggleFullscreen(false);
+      setExamWindowLock(false);
       
       // Calculate scores
       evaluateScoresAndDisplay();
@@ -5466,8 +5441,8 @@ Ensure the question is accurate and options start with A), B), C), D). Output ON
       const attempted = correct + incorrect;
       const accuracy = attempted > 0 ? Math.round((correct / attempted) * 100) : 0;
 
-      const schemeKey = document.getElementById('exam-marking-scheme')?.value || 'none';
-      const scheme = MARKING_SCHEMES[schemeKey] || MARKING_SCHEMES.none;
+      const schemeKey = document.getElementById('exam-marking-scheme')?.value || '1_0';
+      const scheme = MARKING_SCHEMES[schemeKey] || MARKING_SCHEMES['1_0'];
       const maxMarks = total * scheme.correct;
       const negativeDeducted = incorrect * scheme.wrong;
       const netMarks = (correct * scheme.correct) - negativeDeducted;
@@ -5824,30 +5799,23 @@ Provide the corrected answer letter if it was wrong, and a concise explanation (
       
       startAutoSaveLoop();
       
-      const layout = document.getElementById('exam-layout-val').value;
-      if (layout === 'slider') {
-        document.getElementById('exam-slider-container').classList.remove('hidden');
-        document.getElementById('exam-scroll-container').classList.add('hidden');
-        currentQuestionIdx = 0;
-        renderSliderQuestion();
-        initSwipeGestures();
-      } else {
-        document.getElementById('exam-slider-container').classList.add('hidden');
-        document.getElementById('exam-scroll-container').classList.remove('hidden');
-        renderScrollQuestions();
-      }
+      document.getElementById('exam-slider-container').classList.remove('hidden');
+      currentQuestionIdx = 0;
+      renderSliderQuestion();
+      initSwipeGestures();
 
       buildExamNavGrid();
       updateExamProgress();
       startExamTimer();
 
       switchView('results-view', 'exam-view');
-      toggleFullscreen(true);
+      setExamWindowLock(true);
       showToast("Answers reset. Timer restarted.", "info");
     }
 
     function handleRestartExam() {
       // Clear states
+      setExamWindowLock(false);
       stopContinuousGeneration(true);
       continuousMode = false;
       continuousConfig = null;
@@ -5880,8 +5848,6 @@ Provide the corrected answer letter if it was wrong, and a concise explanation (
       if (questionsEditList) questionsEditList.innerHTML = '';
       const examOptionsStack = document.getElementById('exam-options-stack');
       if (examOptionsStack) examOptionsStack.innerHTML = '';
-      const examScrollContainer = document.getElementById('exam-scroll-container');
-      if (examScrollContainer) examScrollContainer.innerHTML = '';
       const resultsReviewList = document.getElementById('results-review-list');
       if (resultsReviewList) resultsReviewList.innerHTML = '';
 
@@ -5893,7 +5859,6 @@ Provide the corrected answer letter if it was wrong, and a concise explanation (
       // Go back to setup view, hiding whatever was the active view
       const activeView = getActiveViewId() || 'results-view';
       switchView(activeView, 'setup-view');
-      toggleFullscreen(false);
     }
 
     // --- GENERAL ROUTERS & TOASTS ---
@@ -5948,11 +5913,20 @@ Provide the corrected answer letter if it was wrong, and a concise explanation (
     function toggleFullscreen(enter = true) {
       if (enter) {
         if (!document.fullscreenElement) {
-          document.documentElement.requestFullscreen().catch(err => {
+          document.documentElement.requestFullscreen().then(() => {
+            if (examLockActive && navigator.keyboard && typeof navigator.keyboard.lock === 'function') {
+              navigator.keyboard.lock(['Escape']).catch(() => {});
+            }
+          }).catch(err => {
             console.log("Fullscreen request rejected: ", err);
           });
+        } else if (examLockActive && navigator.keyboard && typeof navigator.keyboard.lock === 'function') {
+          navigator.keyboard.lock(['Escape']).catch(() => {});
         }
       } else {
+        if (navigator.keyboard && typeof navigator.keyboard.unlock === 'function') {
+          try { navigator.keyboard.unlock(); } catch (e) {}
+        }
         if (document.fullscreenElement) {
           document.exitFullscreen().catch(err => {
             console.log("Fullscreen exit rejected: ", err);
@@ -5964,29 +5938,7 @@ Provide the corrected answer letter if it was wrong, and a concise explanation (
     function handleNewSetClick() {
       const activeView = getActiveViewId();
       if (activeView === 'exam-view') {
-        if (confirm("Are you sure you want to attempt another test? Your current progress will be assessed and you will return to the setup page.")) {
-          // Stop timer, stop autosave, grade
-          if (timerInterval) clearInterval(timerInterval);
-          if (autoSaveInterval) clearInterval(autoSaveInterval);
-          examEndTime = Date.now();
-          localStorage.removeItem('exam_saved_state'); // Clear active session state
-          
-          // Calculate score
-          let correct = 0;
-          let incorrect = 0;
-          let skipped = 0;
-          questions.forEach(q => {
-            const sel = userSelections[q.questionNumber];
-            if (!sel) skipped++;
-            else if (sel === q.correctAnswer) correct++;
-            else incorrect++;
-          });
-          const total = questions.length;
-          const percent = total > 0 ? Math.round((correct / total) * 100) : 0;
-          
-          alert(`📊 Current Test Result:\n\nScore: ${percent}%\nCorrect: ${correct} / ${total}\nIncorrect: ${incorrect}\nSkipped: ${skipped}\n\nClick OK to return to the home page and create a new set.`);
-          handleRestartExam();
-        }
+        promptCancelExamModal();
       } else {
         handleRestartExam();
       }
