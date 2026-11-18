@@ -1386,6 +1386,15 @@
       flex-shrink: 0;
     }
 
+    .exam-rule-label.rule-disabled {
+      opacity: 0.48;
+      cursor: not-allowed;
+    }
+
+    .exam-rule-label.rule-disabled input[type="checkbox"] {
+      cursor: not-allowed;
+    }
+
     /* Question Panel */
     .question-display-card {
       min-height: 380px;
@@ -2105,9 +2114,9 @@
                 <input type="checkbox" id="exam-allow-change-locked" checked>
                 <span>Allow changing answer after locking</span>
               </label>
-              <label class="exam-rule-label">
+              <label class="exam-rule-label" id="exam-allow-mark-review-label">
                 <input type="checkbox" id="exam-allow-mark-review" checked>
-                <span>Allow Mark for Review</span>
+                <span>Allow Mark for Review <small id="exam-mark-review-note" class="hidden" style="color: var(--text-muted);">(requires revisiting)</small></span>
               </label>
             </div>
           </div>
@@ -3695,6 +3704,8 @@
         switchView('preview-view', 'setup-view');
       });
       document.getElementById('pv-start-btn').addEventListener('click', handleStartExam);
+      document.getElementById('exam-allow-revisit').addEventListener('change', syncExamRulesFormDependencies);
+      syncExamRulesFormDependencies();
 
       // Timer controls
       document.getElementById('exam-timer-pause-btn').addEventListener('click', pauseExamTimer);
@@ -4935,11 +4946,14 @@ ${questionListText}`;
       }
       isTimerPaused = false;
       
-      // Load exam rules
+      // Load exam rules (enforce overlap constraints: Mark for Review requires revisiting)
+      const allowRevisit = document.getElementById('exam-allow-revisit')?.checked ?? true;
+      const allowChangeAfterLock = document.getElementById('exam-allow-change-locked')?.checked ?? true;
+      const allowMarkForReview = allowRevisit && (document.getElementById('exam-allow-mark-review')?.checked ?? true);
       examRules = {
-        allowRevisit: document.getElementById('exam-allow-revisit')?.checked ?? true,
-        allowChangeAfterLock: document.getElementById('exam-allow-change-locked')?.checked ?? true,
-        allowMarkForReview: document.getElementById('exam-allow-mark-review')?.checked ?? true
+        allowRevisit,
+        allowChangeAfterLock,
+        allowMarkForReview
       };
 
       userSelections = {};
@@ -5374,12 +5388,16 @@ Ensure the question is accurate and options start with A), B), C), D). Output ON
           { allowRevisit: true, allowChangeAfterLock: true, allowMarkForReview: true },
           state.examRules || {}
         );
+        if (!examRules.allowRevisit) {
+          examRules.allowMarkForReview = false;
+        }
         const revisitCb = document.getElementById('exam-allow-revisit');
         if (revisitCb) revisitCb.checked = examRules.allowRevisit;
         const changeCb = document.getElementById('exam-allow-change-locked');
         if (changeCb) changeCb.checked = examRules.allowChangeAfterLock;
         const reviewCb = document.getElementById('exam-allow-mark-review');
         if (reviewCb) reviewCb.checked = examRules.allowMarkForReview;
+        syncExamRulesFormDependencies();
         questionTimeSpent = state.questionTimeSpent || {};
         if (document.getElementById('exam-marking-scheme')) {
           document.getElementById('exam-marking-scheme').value =
@@ -5508,7 +5526,12 @@ Ensure the question is accurate and options start with A), B), C), D). Output ON
  
       const flagBtn = document.getElementById('exam-flag-btn');
       if (flagBtn) {
-        flagBtn.classList.toggle('hidden', !examRules.allowMarkForReview);
+        const reviewAllowed = examRules.allowRevisit && examRules.allowMarkForReview;
+        flagBtn.classList.toggle('hidden', !reviewAllowed);
+        flagBtn.disabled = isImmutable;
+        flagBtn.style.opacity = isImmutable ? '0.45' : '';
+        flagBtn.style.cursor = isImmutable ? 'not-allowed' : '';
+        flagBtn.title = isImmutable ? 'Locked final answers cannot be marked for review' : '';
         if (flaggedQuestions.has(q.questionNumber)) {
           flagBtn.classList.add('active');
           flagBtn.querySelector('span').textContent = 'Flagged';
@@ -5584,6 +5607,31 @@ Ensure the question is accurate and options start with A), B), C), D). Output ON
       updateActionButtonsState();
     }
 
+    function syncExamRulesFormDependencies() {
+      const revisitCb = document.getElementById('exam-allow-revisit');
+      const reviewCb = document.getElementById('exam-allow-mark-review');
+      const reviewLabel = document.getElementById('exam-allow-mark-review-label');
+      const reviewNote = document.getElementById('exam-mark-review-note');
+      if (!revisitCb || !reviewCb) return;
+
+      if (!revisitCb.checked) {
+        if (!reviewCb.disabled) {
+          reviewCb.dataset.prevChecked = reviewCb.checked ? '1' : '0';
+        }
+        reviewCb.checked = false;
+        reviewCb.disabled = true;
+        if (reviewLabel) reviewLabel.classList.add('rule-disabled');
+        if (reviewNote) reviewNote.classList.remove('hidden');
+      } else {
+        if (reviewCb.disabled && reviewCb.dataset.prevChecked !== undefined) {
+          reviewCb.checked = reviewCb.dataset.prevChecked === '1';
+        }
+        reviewCb.disabled = false;
+        if (reviewLabel) reviewLabel.classList.remove('rule-disabled');
+        if (reviewNote) reviewNote.classList.add('hidden');
+      }
+    }
+
     function updateActionButtonsState() {
       const q = questions[currentQuestionIdx];
       if (!q) return;
@@ -5592,6 +5640,7 @@ Ensure the question is accurate and options start with A), B), C), D). Output ON
       const isLocked = lockedQuestions.has(q.questionNumber);
       const isImmutable = isLocked && !examRules.allowChangeAfterLock;
       const isLast = currentQuestionIdx === questions.length - 1 && !(continuousMode && !continuousStopped);
+      const reviewAllowed = examRules.allowRevisit && examRules.allowMarkForReview;
 
       const clearBtn = document.getElementById('exam-clear-btn');
       if (clearBtn) {
@@ -5600,7 +5649,9 @@ Ensure the question is accurate and options start with A), B), C), D). Output ON
 
       const reviewNextBtn = document.getElementById('exam-review-next-btn');
       if (reviewNextBtn) {
-        reviewNextBtn.classList.toggle('hidden', !examRules.allowMarkForReview);
+        reviewNextBtn.classList.toggle('hidden', !reviewAllowed);
+        reviewNextBtn.disabled = isImmutable;
+        reviewNextBtn.title = isImmutable ? 'Locked final answers cannot be marked for review' : '';
         reviewNextBtn.textContent = isLast ? '🚩 Mark for Review' : '🚩 Mark for Review & Next';
       }
 
@@ -5631,9 +5682,13 @@ Ensure the question is accurate and options start with A), B), C), D). Output ON
     }
 
     function handleMarkReviewAndNext() {
-      if (!examRules.allowMarkForReview) return;
+      if (!examRules.allowRevisit || !examRules.allowMarkForReview) return;
       const q = questions[currentQuestionIdx];
       if (!q) return;
+      if (lockedQuestions.has(q.questionNumber) && !examRules.allowChangeAfterLock) {
+        showToast('Locked final answers cannot be marked for review.', 'warning');
+        return;
+      }
       flaggedQuestions.add(q.questionNumber);
       renderSliderQuestion();
       buildExamNavGrid();
@@ -5725,9 +5780,13 @@ Ensure the question is accurate and options start with A), B), C), D). Output ON
     }
 
     function toggleQuestionFlagged() {
-      if (!examRules.allowMarkForReview) return;
+      if (!examRules.allowRevisit || !examRules.allowMarkForReview) return;
       const q = questions[currentQuestionIdx];
       if (!q) return;
+      if (lockedQuestions.has(q.questionNumber) && !examRules.allowChangeAfterLock) {
+        showToast('Locked final answers cannot be marked for review.', 'warning');
+        return;
+      }
       
       if (flaggedQuestions.has(q.questionNumber)) {
         flaggedQuestions.delete(q.questionNumber);
