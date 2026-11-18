@@ -456,66 +456,55 @@
       margin-top: 4px;
     }
 
-    .topic-chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 8px;
+    /* API Key Generation Guide */
+    .key-guide-details {
+      width: 100%;
+      margin-top: 4px;
     }
 
-    .topic-chip {
-      background: var(--bg-primary);
-      border: 1px solid var(--border-color);
-      color: var(--text-secondary);
-      border-radius: 999px;
-      padding: 4px 12px;
-      font-size: 0.78rem;
-      font-weight: 500;
+    .key-guide-details summary {
       cursor: pointer;
-      transition: all 0.18s ease;
-      font-family: var(--font-family-body);
-    }
-
-    .topic-chip:hover {
-      border-color: var(--accent-color);
       color: var(--accent-color);
-      background: var(--accent-light);
+      font-size: 0.78rem;
+      font-weight: 600;
+      user-select: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
 
-    .pill-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
+    .key-guide-details summary:hover {
+      text-decoration: underline;
     }
 
-    .preset-pill {
+    .key-guide-box {
+      margin-top: 8px;
+      padding: 10px 14px;
+      border-radius: 8px;
       background: var(--bg-primary);
       border: 1px solid var(--border-color);
-      color: var(--text-secondary);
-      border-radius: 8px;
-      padding: 6px 12px;
       font-size: 0.8rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.18s ease;
-      font-family: var(--font-family-body);
+      color: var(--text-secondary);
+      line-height: 1.5;
     }
 
-    .preset-pill:hover {
-      border-color: var(--accent-color);
-      color: var(--text-primary);
+    .key-guide-box ol {
+      margin: 4px 0 6px 18px;
+      padding: 0;
     }
 
-    .preset-pill.active {
-      background: var(--accent-light);
-      border-color: var(--accent-color);
+    .key-guide-box li {
+      margin-bottom: 2px;
+    }
+
+    .key-guide-box a {
       color: var(--accent-color);
       font-weight: 600;
+      text-decoration: none;
     }
 
-    .preset-pill:focus-visible {
-      outline: 2px solid var(--accent-color);
-      outline-offset: 2px;
+    .key-guide-box a:hover {
+      text-decoration: underline;
     }
 
     /* Data Interpretation (DI) Responsive Table */
@@ -1741,11 +1730,17 @@
           <input type="checkbox" id="clear-on-close-cb" checked> Clear on Tab Close
         </label>
       </div>
-      <div class="api-status-row">
-        <span id="api-status-pill" class="api-status-pill">No Key Set</span>
-        <div id="api-security-warning" style="font-size: 0.78rem; color: var(--warning); font-weight: 500;">
-          🛡️ Key stored in sessionStorage (clears on tab close).
+      <div class="api-status-row" style="width: 100%; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+          <span id="api-status-pill" class="api-status-pill">No Key Set</span>
+          <div id="api-security-warning" style="font-size: 0.78rem; color: var(--warning); font-weight: 500;">
+            🛡️ Key stored in sessionStorage (clears on tab close).
+          </div>
         </div>
+        <details class="key-guide-details" id="api-key-guide-details" style="width: auto; margin-top: 0;">
+          <summary id="api-key-guide-summary">🔑 How to get a Google Gemini key</summary>
+          <div class="key-guide-box" id="api-key-guide-body"></div>
+        </details>
       </div>
     </div>
   </section>
@@ -1802,8 +1797,8 @@
     <section id="setup-view" class="view-container active">
       <div class="setup-hero">
         <div>
-          <h1>🤖 AI Mock Exam &amp; Drill Generator</h1>
-          <p>Exam- and topic-specific practice for Govt Exams — Quant &amp; Speed Math drills, Reasoning, Data Interpretation, and full mocks.</p>
+          <h1>🤖 AI MCQ &amp; Practice Generator</h1>
+          <p>Type any exam, subject, or exact drill topic — get verified MCQs, DI tables, shortcut explanations, and timed practice.</p>
         </div>
       </div>
 
@@ -1814,48 +1809,22 @@
             <h2 class="mb-4" style="font-size: 1.25rem;">Configure Your Practice Set</h2>
             <form id="ai-generator-form" novalidate>
               <div class="form-group">
-                <label>Target Exam Pattern (optional):</label>
-                <div class="pill-row" id="exam-preset-pills" role="group" aria-label="Target exam pattern">
-                  <button type="button" class="preset-pill active" data-exam="" data-marking="none">General / Any</button>
-                  <button type="button" class="preset-pill" data-exam="SSC CGL / CHSL" data-marking="ssc">SSC CGL / CHSL</button>
-                  <button type="button" class="preset-pill" data-exam="IBPS / SBI PO & Clerk" data-marking="ibps">IBPS / SBI PO</button>
-                  <button type="button" class="preset-pill" data-exam="RRB NTPC / Railways" data-marking="rrb">RRB NTPC</button>
-                  <button type="button" class="preset-pill" data-exam="UPSC CSAT" data-marking="upsc">UPSC CSAT</button>
-                  <button type="button" class="preset-pill" data-exam="RBI Grade B" data-marking="ibps">RBI Grade B</button>
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label>Section:</label>
-                <div class="pill-row" id="section-preset-pills" role="group" aria-label="Exam section">
-                  <button type="button" class="preset-pill active" data-section="quant">🧮 Quant &amp; Speed Math</button>
-                  <button type="button" class="preset-pill" data-section="reasoning">🧩 Reasoning</button>
-                  <button type="button" class="preset-pill" data-section="di">📊 Data Interpretation</button>
-                  <button type="button" class="preset-pill" data-section="ga">🌍 General Awareness</button>
-                  <button type="button" class="preset-pill" data-section="english">📖 English</button>
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label for="ai-exam-name">Topic / Exact Question Request:</label>
-                <input type="text" id="ai-exam-name" name="examName" class="form-control" required placeholder="e.g., Number squares ending with 5 (two-digit only), Cube roots, Syllogisms" data-error="ai-exam-name-error">
+                <label for="ai-exam-name">Exam / Topic / Exact Question Request:</label>
+                <input type="text" id="ai-exam-name" name="examName" class="form-control" required placeholder="e.g., Squares ending with 5 (two-digit only), Cube roots, Syllogisms, Table DI, SSC CGL Quant" data-error="ai-exam-name-error">
                 <div id="ai-exam-name-error" class="error-msg">
-                  <span role="img" aria-label="Error">⚠️</span> Please enter a topic or specific question request (e.g., Cube roots).
-                </div>
-                <div class="topic-chips" id="dynamic-topic-chips" aria-label="Quick topic suggestions">
-                  <!-- Populated dynamically by selected section -->
+                  <span role="img" aria-label="Error">⚠️</span> Please enter an exam, topic, or specific question request.
                 </div>
               </div>
 
               <div class="form-group">
                 <label for="ai-subjects">Specific Rules / Constraints / Sub-topics (optional):</label>
-                <input type="text" id="ai-subjects" name="subjects" class="form-control" placeholder="e.g., Two-digit only (15–95), perfect cubes 11³–30³, Indian Rupees (₹)">
+                <input type="text" id="ai-subjects" name="subjects" class="form-control" placeholder="e.g., Two-digit only (15–95), perfect cubes 11³–30³, close distractors, specific chapters">
               </div>
 
               <div class="form-group" style="display: flex; flex-direction: column; gap: 10px;">
                 <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; margin-bottom: 0;">
                   <input type="checkbox" id="ai-tricks-cb" checked style="width: 16px; height: 16px; cursor: pointer;">
-                  Include fastest exam shortcut / Vedic trick in explanations
+                  Include fastest shortcut / Vedic trick in explanations
                 </label>
                 <div>
                   <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; margin-bottom: 0;">
@@ -1874,18 +1843,18 @@
               <div class="form-group" id="ai-difficulty-group">
                 <label for="ai-difficulty">Difficulty Level:</label>
                 <select id="ai-difficulty" name="difficulty" class="form-control">
-                  <option value="easy">Easy (Speed Drill / Prelims Warmup)</option>
-                  <option value="medium" selected>Medium (Prelims / Tier-1 Standard)</option>
-                  <option value="hard">Hard (Mains / Tier-2 Level)</option>
+                  <option value="easy">Easy</option>
+                  <option value="medium" selected>Medium</option>
+                  <option value="hard">Hard</option>
                   <option value="mixed">Mixed (Easy to Hard)</option>
                 </select>
               </div>
               <div class="form-group">
                 <label for="ai-style">Question Style:</label>
                 <select id="ai-style" name="style" class="form-control">
-                  <option value="standard">Standard Exam MCQ</option>
+                  <option value="standard">Standard MCQ</option>
                   <option value="speed-drill">Fast Mental Math / Calculation Drill</option>
-                  <option value="case-study">Caselet / Scenario / Data Set Based</option>
+                  <option value="case-study">Caselet / Scenario / Data Table Based</option>
                   <option value="conceptual">Deep Conceptual &amp; Trap Options</option>
                 </select>
               </div>
@@ -1913,7 +1882,7 @@
               <!-- Load state -->
             </div>
             <div class="alert alert-info mt-4" style="margin-bottom: 0; font-size: 0.82rem; padding: 12px;">
-              <span>💡 <strong>Govt Exam Tip:</strong> Pick an Exam Pattern (e.g., SSC CGL / IBPS PO) &amp; Section, or type an exact drill like <em>"number squares ending with 5 two-digit only"</em> or <em>"cube roots"</em>. DI tables render automatically and you get a built-in Rough Sheet + per-question speed tracker!</span>
+              <span>💡 <strong>Tip:</strong> Type any exam or exact drill (e.g., <em>"number squares ending with 5 two-digit only"</em>, <em>"cube roots"</em>, or <em>"Table DI"</em>). Data tables render automatically, and you get a built-in Rough Sheet + per-question speed tracker.</span>
             </div>
           </div>
         </div>
@@ -1994,13 +1963,13 @@
             </select>
           </div>
           <div class="form-group" style="grid-column: 1 / -1;">
-            <label for="exam-marking-scheme">Marking Scheme (Govt Exam Negative Marking):</label>
+            <label for="exam-marking-scheme">Marking Scheme (Negative Marking):</label>
             <select id="exam-marking-scheme" class="form-control">
               <option value="none">No Negative Marking (+1 correct / 0 wrong)</option>
-              <option value="ibps">IBPS / SBI / RBI Pattern (+1 correct / −0.25 wrong)</option>
-              <option value="ssc">SSC CGL / CHSL Pattern (+2 correct / −0.50 wrong)</option>
-              <option value="rrb">RRB NTPC / Railways Pattern (+1 correct / −0.33 wrong)</option>
-              <option value="upsc">UPSC CSAT Pattern (+2.5 correct / −0.83 wrong)</option>
+              <option value="ibps">+1 correct / −0.25 wrong (1/4th negative)</option>
+              <option value="ssc">+2 correct / −0.50 wrong (1/4th negative)</option>
+              <option value="rrb">+1 correct / −0.33 wrong (1/3rd negative)</option>
+              <option value="upsc">+2.5 correct / −0.83 wrong (1/3rd negative)</option>
             </select>
           </div>
         </div>
@@ -2298,6 +2267,10 @@
         <button type="button" id="modal-test-key-btn" class="btn btn-secondary" style="white-space: nowrap;">⚡ Test Key</button>
       </div>
       <div id="modal-test-result" style="font-size: 0.82rem; margin-top: 8px; display: none;"></div>
+      <details class="key-guide-details" id="modal-key-guide-details" style="margin-top: 8px;">
+        <summary id="modal-key-guide-summary">🔑 How to generate this API key</summary>
+        <div class="key-guide-box" id="modal-key-guide-body"></div>
+      </details>
     </div>
     <div class="form-group">
       <label for="settings-endpoint">API Endpoint URL:</label>
@@ -2347,160 +2320,14 @@
     let userSelections = {}; // { qNum: letter }
     let flaggedQuestions = new Set(); // Set of flagged qNums
     let questionTimeSpent = {}; // { qNum: seconds }
-    let selectedTargetExam = '';
-    let selectedSection = 'quant';
 
-    // Govt Exam Negative Marking Presets
+    // Negative Marking Presets (configured on Review screen)
     const MARKING_SCHEMES = {
       none: { label: 'No Negative Marking', correct: 1, wrong: 0 },
       ibps: { label: 'IBPS / SBI / RBI (+1 / −0.25)', correct: 1, wrong: 0.25 },
       ssc:  { label: 'SSC CGL / CHSL (+2 / −0.50)', correct: 2, wrong: 0.5 },
       rrb:  { label: 'RRB NTPC (+1 / −0.33)', correct: 1, wrong: 1 / 3 },
       upsc: { label: 'UPSC CSAT (+2.5 / −0.83)', correct: 2.5, wrong: 2.5 / 3 }
-    };
-
-    // Section-wise Govt Exam & Speed Math Quick Topic Presets
-    const SECTION_TOPIC_PRESETS = {
-      quant: [
-        {
-          label: 'Squares ending in 5 (2-digit)',
-          topic: 'Number squares ending with 5 (two-digit only)',
-          rules: 'Use ONLY two-digit numbers ending in 5 (15, 25, 35, 45, 55, 65, 75, 85, 95). If >9 questions, vary angles: direct square, reverse square root of numbers ending in 25, sum/difference of two squares, missing digit.',
-          style: 'speed-drill'
-        },
-        {
-          label: 'Cube Roots',
-          topic: 'Cube roots of perfect cubes',
-          rules: 'Perfect cubes from 11³ to 35³ (e.g., 1728 to 42875). Include unit-digit & grouping shortcut trick in explanation.',
-          style: 'speed-drill'
-        },
-        {
-          label: '2-Digit Squares (11–99)',
-          topic: 'Squares of two-digit numbers (11 to 99)',
-          rules: 'Two-digit numbers from 11 to 99 only. Include close calculation-trap distractors and base-method mental shortcut.',
-          style: 'speed-drill'
-        },
-        {
-          label: 'Simplification & BODMAS',
-          topic: 'Simplification, Approximation & BODMAS',
-          rules: 'Fast govt-exam arithmetic with fractions, squares, cubes, roots, and percentages.',
-          style: 'speed-drill'
-        },
-        {
-          label: 'Percentages & Fractions',
-          topic: 'Percentage & Fraction Equivalents',
-          rules: 'Successive % change, fraction-to-percent ratios (1/6, 1/7, 1/8, 1/9, 1/12), election/consumption problems.',
-          style: 'standard'
-        },
-        {
-          label: 'Profit, Loss & Discount',
-          topic: 'Profit, Loss & Discount',
-          rules: 'Markup %, successive discounts, dishonest shopkeeper, ratio method shortcuts.',
-          style: 'standard'
-        },
-        {
-          label: 'Time, Speed & Distance',
-          topic: 'Time, Speed, Distance & Trains',
-          rules: 'Relative speed, average speed, platform/train crossing, boats & streams.',
-          style: 'standard'
-        },
-        {
-          label: 'Time & Work',
-          topic: 'Time & Work and Pipes & Cisterns',
-          rules: 'LCM efficiency method, alternate days, men-days-hours formula.',
-          style: 'standard'
-        },
-        {
-          label: 'Number Series',
-          topic: 'Number Series (Missing & Wrong Number)',
-          rules: 'Square/cube ± n, prime differences, double difference, alternate series.',
-          style: 'speed-drill'
-        }
-      ],
-      reasoning: [
-        {
-          label: 'Syllogisms',
-          topic: 'Syllogisms (Statements & Conclusions)',
-          rules: 'Include Only a few, Some not, Possibility cases; unambiguous Venn diagram deduction.',
-          style: 'standard'
-        },
-        {
-          label: 'Blood Relations',
-          topic: 'Blood Relations (Pointing & Coded)',
-          rules: 'Family tree & coded symbols (A + B means A is father of B).',
-          style: 'standard'
-        },
-        {
-          label: 'Coding-Decoding',
-          topic: 'Coding-Decoding (Letter, Number & Chinese)',
-          rules: 'Alphabetical positional shifts, opposite pairs, and substitution coding.',
-          style: 'standard'
-        },
-        {
-          label: 'Seating Arrangement',
-          topic: 'Linear & Circular Seating Arrangement',
-          rules: '6 to 8 persons facing center/north with clear, uniquely solvable clues.',
-          style: 'case-study'
-        },
-        {
-          label: 'Direction Sense',
-          topic: 'Direction & Distance Sense',
-          rules: 'Shortest Pythagorean distance, turns, shadow-based direction problems.',
-          style: 'standard'
-        },
-        {
-          label: 'Inequalities',
-          topic: 'Coded & Direct Mathematical Inequalities',
-          rules: 'Either-Or cases, direct symbol chains (>, ≥, =, <, ≤).',
-          style: 'speed-drill'
-        }
-      ],
-      di: [
-        {
-          label: 'Table DI (Sales & Production)',
-          topic: 'Table Data Interpretation (Company Sales & Production)',
-          rules: 'Include a clean Markdown table in each question with cleanly divisible numbers; test %, ratio, average, and difference.',
-          style: 'case-study'
-        },
-        {
-          label: 'Percentage & Ratio DI',
-          topic: 'Data Interpretation (Percentage Distribution & Ratios)',
-          rules: 'Include a clean Markdown table with male/female or department ratios and total counts; test quick ratio/percentage shortcuts.',
-          style: 'case-study'
-        },
-        {
-          label: 'Income & Expenditure DI',
-          topic: 'Income, Expenditure & Profit % Data Interpretation',
-          rules: 'Include a clean Markdown table across 5 years (in ₹ Crores); use Profit % = ((Income − Expenditure) / Expenditure) × 100.',
-          style: 'case-study'
-        },
-        {
-          label: 'Caselet DI',
-          topic: 'Caselet Data Interpretation (Word-Based Data)',
-          rules: 'Short structured paragraph with 3–4 linked numerical facts (Venn or table solvable) followed by a sharp calculation question.',
-          style: 'case-study'
-        },
-        {
-          label: 'Missing Data Table DI',
-          topic: 'Missing Data Table Interpretation',
-          rules: 'Include a Markdown table with 1–2 missing cells marked "-" solvable from totals/averages given in the question.',
-          style: 'case-study'
-        }
-      ],
-      ga: [
-        { label: 'Indian Polity', topic: 'Indian Polity & Constitution', rules: 'Articles, Amendments, Parliament, Fundamental Rights, Judiciary.', style: 'standard' },
-        { label: 'Modern History', topic: 'Modern Indian History & Freedom Struggle', rules: '1857 to 1947 events, Acts, Governor-Generals, Movements.', style: 'standard' },
-        { label: 'Indian Economy & Banking', topic: 'Indian Economy, RBI & Banking Awareness', rules: 'Monetary policy, Repo/CRR/SLR, Inflation, Budget, Five-Year Plans.', style: 'standard' },
-        { label: 'Geography & Static GK', topic: 'Indian Geography & Static GK', rules: 'Rivers, National Parks, Passes, Classical Dances, Awards.', style: 'standard' },
-        { label: 'General Science', topic: 'General Science (Physics, Chemistry, Biology)', rules: 'Everyday science, vitamins/diseases, SI units, chemical formulas.', style: 'standard' }
-      ],
-      english: [
-        { label: 'Error Spotting', topic: 'Grammar & Error Spotting', rules: 'Subject-verb agreement, tenses, prepositions, conditionals, modifiers.', style: 'standard' },
-        { label: 'Idioms & Phrases', topic: 'Idioms, Phrases & Phrasal Verbs', rules: 'High-frequency SSC & Banking exam idioms with clear contextual meaning.', style: 'standard' },
-        { label: 'One-Word Substitution', topic: 'One-Word Substitution', rules: 'Classic SSC CGL vocabulary & root-word memory tips in explanation.', style: 'standard' },
-        { label: 'Synonyms & Antonyms', topic: 'Synonyms & Antonyms', rules: 'High-frequency competitive exam vocabulary with usage clues.', style: 'standard' },
-        { label: 'Para Jumbles', topic: 'Sentence Rearrangement / Para Jumbles', rules: '4 sentences (P, Q, R, S) with clear logical connectors.', style: 'standard' }
-      ]
     };
     
     // Exam parameters
@@ -2544,6 +2371,13 @@
         modelsAuthPrefix: '',
         placeholder: 'Enter Gemini API Key (AIza...)',
         info: 'Direct browser access to Google AI Studio.',
+        keyUrl: 'https://aistudio.google.com/apikey',
+        keyUrlLabel: 'Open Google AI Studio API Keys ↗',
+        keySteps: [
+          'Sign in with your Google account on Google AI Studio.',
+          'Click "Create API key" (select an existing or new Google Cloud project).',
+          'Copy the generated key (starts with AIza...), paste it above, and click ⚡ Test & Sync.'
+        ],
         authHeader: 'Authorization',
         authPrefix: 'Bearer ',
         headers: '{\n  "Content-Type": "application/json"\n}',
@@ -2561,6 +2395,13 @@
         modelsEndpoint: 'https://api.openai.com/v1/models',
         placeholder: 'Enter OpenAI API Key (sk-...)',
         info: 'Direct browser access to OpenAI API.',
+        keyUrl: 'https://platform.openai.com/api-keys',
+        keyUrlLabel: 'Open OpenAI API Keys ↗',
+        keySteps: [
+          'Sign in to OpenAI Platform and open Settings → API keys.',
+          'Ensure API billing/credits are active under Billing.',
+          'Click "+ Create new secret key", copy the key (sk-...), and paste it above.'
+        ],
         authHeader: 'Authorization',
         authPrefix: 'Bearer ',
         headers: '{\n  "Content-Type": "application/json"\n}',
@@ -2579,6 +2420,13 @@
         modelsEndpoint: 'https://api.groq.com/openai/v1/models',
         placeholder: 'Enter Groq API Key (gsk_...)',
         info: 'Ultra-fast direct browser access to Groq.',
+        keyUrl: 'https://console.groq.com/keys',
+        keyUrlLabel: 'Open Groq Console API Keys ↗',
+        keySteps: [
+          'Sign in to Groq Console (free tier available for fast Llama/Qwen models).',
+          'Open "API Keys" in the left menu and click "Create API Key".',
+          'Copy the key (starts with gsk_...), paste it above, and click ⚡ Test & Sync.'
+        ],
         authHeader: 'Authorization',
         authPrefix: 'Bearer ',
         headers: '{\n  "Content-Type": "application/json"\n}',
@@ -2595,6 +2443,13 @@
         modelsEndpoint: 'https://openrouter.ai/api/v1/models',
         placeholder: 'Enter OpenRouter Key (sk-or-...)',
         info: 'Direct browser access to 100+ models via OpenRouter.',
+        keyUrl: 'https://openrouter.ai/keys',
+        keyUrlLabel: 'Open OpenRouter Keys ↗',
+        keySteps: [
+          'Sign in at OpenRouter and go to Keys.',
+          'Click "Create Key" (add credits or pick a :free model after clicking ⚡ Test & Sync).',
+          'Copy the key (starts with sk-or-...) and paste it above.'
+        ],
         authHeader: 'Authorization',
         authPrefix: 'Bearer ',
         headers: '{\n  "Content-Type": "application/json",\n  "X-Title": "PrepMaster AI"\n}',
@@ -2613,6 +2468,13 @@
         modelsEndpoint: 'https://api.deepseek.com/models',
         placeholder: 'Enter DeepSeek API Key (sk-...)',
         info: 'Direct browser access to DeepSeek API.',
+        keyUrl: 'https://platform.deepseek.com/api_keys',
+        keyUrlLabel: 'Open DeepSeek API Keys ↗',
+        keySteps: [
+          'Sign in to DeepSeek Platform and open "API keys".',
+          'Make sure your account has API balance under Top up.',
+          'Click "Create new API key", copy the key (sk-...), and paste it above.'
+        ],
         authHeader: 'Authorization',
         authPrefix: 'Bearer ',
         headers: '{\n  "Content-Type": "application/json"\n}',
@@ -2629,6 +2491,13 @@
         modelsEndpoint: 'https://api.anthropic.com/v1/models',
         placeholder: 'Enter Claude API Key (sk-ant-...)',
         info: 'Direct browser access enabled via anthropic-dangerous-direct-browser-access.',
+        keyUrl: 'https://console.anthropic.com/settings/keys',
+        keyUrlLabel: 'Open Anthropic Console Keys ↗',
+        keySteps: [
+          'Sign in to Anthropic Console and open Settings → API Keys.',
+          'Ensure API credits are funded under Plans & Billing.',
+          'Click "Create Key", copy the key (sk-ant-...), and paste it above.'
+        ],
         authHeader: 'x-api-key',
         authPrefix: '',
         headers: '{\n  "Content-Type": "application/json",\n  "anthropic-version": "2023-06-01",\n  "anthropic-dangerous-direct-browser-access": "true"\n}',
@@ -2645,6 +2514,13 @@
         modelsEndpoint: 'https://integrate.api.nvidia.com/v1/models',
         placeholder: 'Enter NVIDIA NIM Key (nvapi-...)',
         info: '⚠️ NVIDIA NIM blocks direct browser CORS requests. Use a CORS proxy URL or OpenRouter.',
+        keyUrl: 'https://build.nvidia.com/explore/discover',
+        keyUrlLabel: 'Open NVIDIA Build ↗',
+        keySteps: [
+          'Sign in at build.nvidia.com and select any NIM model.',
+          'Click "Get API Key" → "Generate Key" (starts with nvapi-...).',
+          'Note: NVIDIA NIM blocks direct browser CORS — route via a CORS proxy in ⚙️ Configure or use OpenRouter/Groq.'
+        ],
         authHeader: 'Authorization',
         authPrefix: 'Bearer ',
         headers: '{\n  "Content-Type": "application/json"\n}',
@@ -2659,6 +2535,13 @@
         modelsEndpoint: '',
         placeholder: 'Enter API Key',
         info: 'Sent directly to your custom OpenAI-compatible or Gemini endpoint.',
+        keyUrl: '',
+        keyUrlLabel: '',
+        keySteps: [
+          'Create an API key from your OpenAI-compatible provider (e.g., Together, Fireworks, Mistral, LiteLLM, or local Ollama).',
+          'Open ⚙️ Configure, set your Endpoint URL and Custom Model ID, and paste your key.',
+          'Click ⚡ Test Key to verify the connection.'
+        ],
         authHeader: 'Authorization',
         authPrefix: 'Bearer ',
         headers: '{\n  "Content-Type": "application/json"\n}',
@@ -2706,7 +2589,6 @@
       loadApiSettings();
       initThemeToggle();
       initFormSliders();
-      initExamAndSectionPresets();
       initDialogLightDismissFallback();
       initAccessibleFormValidation();
       initExamKeyboardShortcuts();
@@ -2808,14 +2690,33 @@
       pill.textContent = text;
     }
 
+    function renderApiKeyGuide(presetKey, target = 'bar') {
+      const preset = PROVIDER_PRESETS[presetKey] || PROVIDER_PRESETS.gemini;
+      const summaryEl = document.getElementById(target === 'modal' ? 'modal-key-guide-summary' : 'api-key-guide-summary');
+      const bodyEl = document.getElementById(target === 'modal' ? 'modal-key-guide-body' : 'api-key-guide-body');
+      if (!summaryEl || !bodyEl) return;
+
+      summaryEl.textContent = `🔑 How to get a ${preset.name} key`;
+      const stepsHtml = (preset.keySteps || [])
+        .map(s => `<li>${escapeHTML(s)}</li>`)
+        .join('');
+      const linkHtml = preset.keyUrl
+        ? `<a href="${escapeHTML(preset.keyUrl)}" target="_blank" rel="noopener noreferrer">${escapeHTML(preset.keyUrlLabel || preset.keyUrl)}</a>`
+        : '';
+
+      bodyEl.innerHTML = `<ol>${stepsHtml}</ol>${linkHtml}`;
+    }
+
     function updateApiSecurityNotice() {
       const preset = PROVIDER_PRESETS[preferences.preset] || PROVIDER_PRESETS.gemini;
       const warningEl = document.getElementById('api-security-warning');
-      if (!warningEl) return;
-      const storageNote = preferences.clearOnClose
-        ? '🛡️ Key clears on tab close.'
-        : '💾 Key remembered in browser.';
-      warningEl.textContent = `${storageNote} ${preset.info}`;
+      if (warningEl) {
+        const storageNote = preferences.clearOnClose
+          ? '🛡️ Key clears on tab close.'
+          : '💾 Key remembered in browser.';
+        warningEl.textContent = `${storageNote} ${preset.info}`;
+      }
+      renderApiKeyGuide(preferences.preset, 'bar');
     }
 
     function populateModelSelect(presetKey, preferredModel = '') {
@@ -3014,6 +2915,7 @@
         testRes.textContent = '';
       }
 
+      renderApiKeyGuide(preferences.preset, 'modal');
       dialog.showModal();
     }
 
@@ -3331,66 +3233,6 @@
       }, true);
     }
 
-    function renderTopicChipsForSection(sectionKey) {
-      const container = document.getElementById('dynamic-topic-chips');
-      if (!container) return;
-      const presets = SECTION_TOPIC_PRESETS[sectionKey] || SECTION_TOPIC_PRESETS.quant;
-      container.innerHTML = '';
-
-      presets.forEach(item => {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'topic-chip';
-        btn.textContent = item.label;
-        btn.addEventListener('click', () => {
-          const topicInput = document.getElementById('ai-exam-name');
-          const subjectsInput = document.getElementById('ai-subjects');
-          const styleSelect = document.getElementById('ai-style');
-          topicInput.value = item.topic;
-          subjectsInput.value = item.rules || '';
-          if (item.style && styleSelect) {
-            styleSelect.value = item.style;
-          }
-          topicInput.dispatchEvent(new Event('input', { bubbles: true }));
-          topicInput.focus();
-        });
-        container.appendChild(btn);
-      });
-    }
-
-    function initExamAndSectionPresets() {
-      const examPills = document.querySelectorAll('#exam-preset-pills .preset-pill');
-      examPills.forEach(pill => {
-        pill.addEventListener('click', () => {
-          examPills.forEach(p => p.classList.remove('active'));
-          pill.classList.add('active');
-          selectedTargetExam = pill.dataset.exam || '';
-          const markingSelect = document.getElementById('exam-marking-scheme');
-          if (markingSelect && pill.dataset.marking) {
-            markingSelect.value = pill.dataset.marking;
-          }
-        });
-      });
-
-      const sectionPills = document.querySelectorAll('#section-preset-pills .preset-pill');
-      sectionPills.forEach(pill => {
-        pill.addEventListener('click', () => {
-          sectionPills.forEach(p => p.classList.remove('active'));
-          pill.classList.add('active');
-          selectedSection = pill.dataset.section || 'quant';
-          renderTopicChipsForSection(selectedSection);
-          const styleSelect = document.getElementById('ai-style');
-          if (styleSelect) {
-            if (selectedSection === 'di') styleSelect.value = 'case-study';
-            else if (selectedSection === 'quant') styleSelect.value = 'speed-drill';
-            else styleSelect.value = 'standard';
-          }
-        });
-      });
-
-      renderTopicChipsForSection(selectedSection);
-    }
-
     function initExamKeyboardShortcuts() {
       document.addEventListener('keydown', (e) => {
         if (getActiveViewId() !== 'exam-view') return;
@@ -3677,6 +3519,7 @@
       document.getElementById('settings-headers').value = preset.headers;
       document.getElementById('settings-auth-header').value = preset.authHeader;
       document.getElementById('settings-auth-prefix').value = preset.authPrefix;
+      renderApiKeyGuide(presetKey, 'modal');
     }
 
     function savePreferences() {
@@ -3849,33 +3692,19 @@
     }
 
     function buildGenerationPrompt(examName, subjects, difficulty, qCount, style, startNumber = 1, recentStems = [], opts = {}) {
-      const targetExam = opts.targetExam ?? selectedTargetExam;
-      const section = opts.section ?? selectedSection;
       const includeTricks = opts.includeTricks !== undefined
         ? opts.includeTricks
         : Boolean(document.getElementById('ai-tricks-cb')?.checked);
 
-      const sectionLabels = {
-        quant: 'Quantitative Aptitude & Speed Math',
-        reasoning: 'Logical Reasoning',
-        di: 'Data Interpretation (DI)',
-        ga: 'General Awareness / GK',
-        english: 'English Language & Verbal Ability'
-      };
-      const sectionLabel = sectionLabels[section] || 'Competitive Exam Practice';
-
-      let styleDesc = 'Standard competitive exam MCQ style.';
+      let styleDesc = 'Standard MCQ style.';
       if (style === 'speed-drill') {
         styleDesc = 'Fast calculation / mental-math drill style: concise stems, sharp numerical accuracy, and realistic near-miss distractors.';
       } else if (style === 'case-study') {
-        styleDesc = 'Caselet / scenario / structured data-set based exam questions.';
+        styleDesc = 'Caselet / scenario / structured data-table based MCQ style.';
       } else if (style === 'conceptual') {
         styleDesc = 'Deep conceptual understanding, edge cases, and classic exam trap options.';
       }
 
-      const examPatternLine = targetExam
-        ? `TARGET EXAM PATTERN: ${targetExam} (${sectionLabel}). Match this exam's authentic style, phrasing, and numerical patterns.`
-        : `SECTION FOCUS: ${sectionLabel}.`;
       const constraintsLine = subjects
         ? `EXACT CONSTRAINTS / SUB-TOPICS (MANDATORY): ${subjects}`
         : '';
@@ -3890,23 +3719,23 @@
         : difficulty.toUpperCase();
 
       const combinedRequest = `${examName} ${subjects}`.toLowerCase();
-      const needsDiTable = section === 'di'
-        || /\b(data interpretation|table di|di\b|missing table|bar chart|tabular)\b/i.test(combinedRequest);
+      const needsDiTable = style === 'case-study'
+        || /\b(data interpretation|table di|di\b|missing table|bar chart|tabular|table based)\b/i.test(combinedRequest);
+      const isReasoning = /\b(reasoning|syllogism|blood relation|seating|puzzle|coding|decoding|direction|inequalit|analogy)\b/i.test(combinedRequest);
 
       const diTableRule = needsDiTable
-        ? `\n- DATA INTERPRETATION FORMAT: Include a clean, compact Markdown table (using | Col 1 | Col 2 | and | --- | --- | rows, 3–5 columns and 4–5 rows) right at the start of "questionText" using realistic, cleanly divisible exam numbers, followed by a blank line and the question.`
+        ? `\n- DATA INTERPRETATION FORMAT: When presenting tabular data, include a clean, compact Markdown table (using | Col 1 | Col 2 | and | --- | --- | rows, 3–5 columns and 4–5 rows) right at the start of "questionText" using realistic, cleanly divisible numbers, followed by a blank line and the question.`
         : '';
 
-      const reasoningRule = section === 'reasoning'
+      const reasoningRule = isReasoning
         ? `\n- REASONING FORMAT: Use clean line breaks inside "questionText" for Statements / Conclusions / Clues so they are easy to read. Every puzzle/syllogism/relation MUST have one unique, airtight logical answer.`
         : '';
 
       const trickRule = includeTricks
-        ? `\n- SHORTCUT TRICK IN EXPLANATION: In "explanation", lead with the fastest exam shortcut / Vedic or mental-math trick (e.g., n×(n+1) followed by 25 for numbers ending in 5, unit-digit + cube-range grouping for cube roots, fraction/ratio shortcuts) in 1–2 concise sentences.`
+        ? `\n- SHORTCUT TRICK IN EXPLANATION: In "explanation", lead with the fastest shortcut / mental-math trick (e.g., n×(n+1) followed by 25 for numbers ending in 5, unit-digit + cube-range grouping for cube roots, fraction/ratio shortcuts) in 1–2 concise sentences.`
         : '';
 
       return `Generate ${qCount} new multiple choice questions strictly for: "${examName}".
-${examPatternLine}
 ${constraintsLine}
 STYLE: ${styleDesc}${numberingNote}${avoidNote}
 CRITICAL INSTRUCTIONS:
@@ -3923,7 +3752,7 @@ CRITICAL INSTRUCTIONS:
     "questionText": "...",
     "options": ["A) ...", "B) ...", "C) ...", "D) ..."],
     "correctAnswer": "<single letter A, B, C, or D>",
-    "explanation": "Concise 1-2 sentence explanation with shortcut trick."
+    "explanation": "Concise 1-2 sentence explanation."
   }
 ]
 Output ONLY the valid JSON array.`;
@@ -4035,7 +3864,7 @@ Output ONLY the valid JSON array.`;
         ? Math.max(...questions.map(q => q.questionNumber)) + 1
         : 1;
       const difficulty = getContinuousBatchDifficulty(nextBatchNum);
-      const { examName, subjects, style, targetExam, section, includeTricks } = continuousConfig;
+      const { examName, subjects, style, includeTricks } = continuousConfig;
 
       const recentStems = questions.slice(-15).map(q => q.questionText.slice(0, 120));
       const prompt = buildGenerationPrompt(
@@ -4046,7 +3875,7 @@ Output ONLY the valid JSON array.`;
         style,
         startNum,
         recentStems,
-        { targetExam, section, includeTricks }
+        { includeTricks }
       );
 
       try {
@@ -4218,8 +4047,6 @@ Output ONLY the valid JSON array.`;
           examName,
           subjects,
           style,
-          targetExam: selectedTargetExam,
-          section: selectedSection,
           includeTricks
         };
         continuousBatchNumber = 1;
@@ -4261,7 +4088,7 @@ Output ONLY the valid JSON array.`;
             style,
             startNum,
             recentStems,
-            { targetExam: selectedTargetExam, section: selectedSection, includeTricks }
+            { includeTricks }
           );
           const resultText = await callAiCompletions(prompt, systemPrompt, 2, 1200);
           const parsed = await parseAiQuestionResponse(resultText);
