@@ -3,20 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PrepMaster AI | Secure Mock Exam & AI Generation</title>
+  <title>PrepMaster AI | AI Mock Exam Generator</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
   
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-  
-  <!-- External Libraries (CDNs) -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
-  <script>
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
-  </script>
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 
   <style>
     /* Premium CSS Variables & Theme Configuration */
@@ -283,7 +276,14 @@
       background: var(--bg-primary);
       border: 1px solid var(--border-color);
       border-radius: 6px;
-      padding: 2px 8px;
+      padding: 2px 6px;
+      gap: 4px;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .settings-input-wrapper:focus-within {
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 2px var(--accent-light);
     }
 
     .settings-input-wrapper input {
@@ -293,7 +293,26 @@
       font-size: 0.85rem;
       outline: none;
       padding: 4px;
-      width: 160px;
+      width: 175px;
+    }
+
+    .key-vis-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .key-vis-btn:hover {
+      color: var(--text-primary);
+      background: var(--bg-hover);
     }
 
     .settings-bar select {
@@ -301,9 +320,53 @@
       border: 1px solid var(--border-color);
       color: var(--text-primary);
       border-radius: 6px;
-      padding: 4px 8px;
+      padding: 5px 8px;
       outline: none;
       font-size: 0.85rem;
+      max-width: 260px;
+    }
+
+    .settings-bar select:focus-visible {
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 2px var(--accent-light);
+    }
+
+    .api-status-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .api-status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border: 1px solid var(--border-color);
+      background: var(--bg-primary);
+      color: var(--text-secondary);
+    }
+
+    .api-status-pill.status-ok {
+      border-color: var(--success);
+      background: var(--success-light);
+      color: var(--success);
+    }
+
+    .api-status-pill.status-err {
+      border-color: var(--error);
+      background: var(--error-light);
+      color: var(--error);
+    }
+
+    .api-status-pill.status-testing {
+      border-color: var(--accent-color);
+      background: var(--accent-light);
+      color: var(--accent-color);
     }
 
     /* Header */
@@ -371,36 +434,281 @@
       padding: 32px 24px;
     }
 
-    /* Tabs Interface */
-    .tabs-nav {
+    /* Setup Hero & Quick Topic Chips */
+    .setup-hero {
+      margin-bottom: 24px;
       display: flex;
-      border-bottom: 2px solid var(--border-color);
-      margin-bottom: 28px;
-      gap: 8px;
+      justify-content: space-between;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      gap: 12px;
     }
 
-    .tab-btn {
-      background: transparent;
-      border: none;
-      border-bottom: 2px solid transparent;
-      color: var(--text-secondary);
-      font-family: var(--font-family-title);
-      font-weight: 600;
-      font-size: 1.05rem;
-      padding: 12px 24px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      margin-bottom: -2px;
-      outline: none;
-    }
-
-    .tab-btn:hover {
+    .setup-hero h1 {
+      font-size: 1.65rem;
+      line-height: 1.25;
       color: var(--text-primary);
     }
 
-    .tab-btn.active {
+    .setup-hero p {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    .topic-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .topic-chip {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      border-radius: 999px;
+      padding: 4px 12px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      font-family: var(--font-family-body);
+    }
+
+    .topic-chip:hover {
+      border-color: var(--accent-color);
       color: var(--accent-color);
-      border-bottom-color: var(--accent-color);
+      background: var(--accent-light);
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .preset-pill {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      font-family: var(--font-family-body);
+    }
+
+    .preset-pill:hover {
+      border-color: var(--accent-color);
+      color: var(--text-primary);
+    }
+
+    .preset-pill.active {
+      background: var(--accent-light);
+      border-color: var(--accent-color);
+      color: var(--accent-color);
+      font-weight: 600;
+    }
+
+    .preset-pill:focus-visible {
+      outline: 2px solid var(--accent-color);
+      outline-offset: 2px;
+    }
+
+    /* Data Interpretation (DI) Responsive Table */
+    .q-formatted-block {
+      white-space: pre-wrap;
+    }
+
+    .di-table-wrapper {
+      overflow: auto;
+      max-inline-size: 100%;
+      max-block-size: min(420px, 65vh);
+      margin: 12px 0 16px;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      background: var(--bg-primary);
+      container-type: inline-size;
+    }
+
+    .di-table-wrapper:focus-visible {
+      outline: 2px solid var(--accent-color);
+      outline-offset: 2px;
+    }
+
+    .di-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 0.9rem;
+      text-align: left;
+    }
+
+    .di-table thead {
+      position: sticky;
+      inset-block-start: 0;
+      z-index: 2;
+    }
+
+    .di-table thead th {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      font-weight: 600;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border-color);
+      border-right: 1px solid var(--border-color);
+      white-space: nowrap;
+    }
+
+    .di-table thead th:last-child,
+    .di-table tbody td:last-child {
+      border-right: none;
+    }
+
+    .di-table tbody th {
+      position: sticky;
+      inset-inline-start: 0;
+      z-index: 1;
+      background: var(--bg-card);
+      color: var(--text-primary);
+      font-weight: 600;
+      padding: 9px 14px;
+      border-bottom: 1px solid var(--border-color);
+      border-right: 1px solid var(--border-color);
+      white-space: nowrap;
+    }
+
+    .di-table tbody td {
+      padding: 9px 14px;
+      color: var(--text-primary);
+      border-bottom: 1px solid var(--border-color);
+      border-right: 1px solid var(--border-color);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .di-table tbody tr:last-child th,
+    .di-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    @container (width < 460px) {
+      .di-table,
+      .di-table thead,
+      .di-table tbody,
+      .di-table tr,
+      .di-table th,
+      .di-table td {
+        display: block;
+      }
+
+      .di-table thead {
+        display: none;
+      }
+
+      .di-table tr {
+        border-bottom: 2px solid var(--border-color);
+        padding-bottom: 6px;
+        margin-bottom: 6px;
+      }
+
+      .di-table tbody th {
+        position: sticky;
+        inset-block-start: 0;
+        z-index: 2;
+        background: var(--bg-secondary);
+        border-right: none;
+      }
+
+      .di-table tbody td {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        border-right: none;
+        border-bottom: 1px dashed var(--border-color);
+      }
+
+      .di-table tbody td::before {
+        content: attr(data-label) ": ";
+        font-weight: 600;
+        color: var(--text-secondary);
+      }
+    }
+
+    /* Rough Sheet Panel in Exam Sidebar */
+    .rough-sheet-box {
+      margin-bottom: 16px;
+      border-top: 1px dashed var(--border-color);
+      padding-top: 14px;
+    }
+
+    .rough-sheet-box summary {
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      user-select: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .rough-sheet-box summary:hover {
+      color: var(--accent-color);
+    }
+
+    .rough-sheet-textarea {
+      width: 100%;
+      margin-top: 10px;
+      min-height: 110px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.82rem;
+      resize: vertical;
+      outline: none;
+    }
+
+    .rough-sheet-textarea:focus {
+      border-color: var(--accent-color);
+    }
+
+    .q-time-badge {
+      font-size: 0.74rem;
+      color: var(--text-muted);
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Keyboard Shortcut Hints */
+    .kbd-hints {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: var(--card-border);
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      justify-content: center;
+    }
+
+    .kbd-hints kbd {
+      background: var(--bg-hover);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.74rem;
+      color: var(--text-primary);
     }
 
     /* Glass Panels */
@@ -505,6 +813,15 @@
       box-shadow: none !important;
     }
 
+    .btn:focus-visible,
+    .topic-chip:focus-visible,
+    .theme-toggle-btn:focus-visible,
+    .key-vis-btn:focus-visible,
+    .dialog-close:focus-visible {
+      outline: 2px solid var(--accent-color);
+      outline-offset: 2px;
+    }
+
     /* Views */
     .view-container {
       display: none;
@@ -519,55 +836,34 @@
       transform: translateY(0);
     }
 
-    /* Drag & Drop */
-    .drag-drop-zone {
-      border: 2px dashed var(--border-color);
-      border-radius: 12px;
-      padding: 36px 20px;
-      text-align: center;
-      cursor: pointer;
-      background: rgba(0, 0, 0, 0.05);
-      transition: all 0.2s ease;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
-      position: relative;
+    /* Form Validation (:user-invalid + fallback) */
+    .form-control:is(:user-invalid, .user-invalid-fallback) {
+      border-color: var(--error);
+      box-shadow: 0 0 0 3px var(--error-light);
     }
 
-    .drag-drop-zone:hover, .drag-drop-zone.dragover {
-      border-color: var(--accent-color);
-      background: var(--accent-light);
+    .error-msg {
+      display: none;
+      color: var(--error);
+      font-size: 0.82rem;
+      margin-top: 6px;
+      font-weight: 500;
     }
 
-    .drag-drop-zone svg {
-      width: 44px;
-      height: 44px;
-      stroke: var(--text-secondary);
-      transition: stroke 0.2s ease;
+    .form-control:is(:user-invalid, .user-invalid-fallback) + .error-msg {
+      display: block;
     }
 
-    .drag-drop-zone:hover svg, .drag-drop-zone.dragover svg {
-      stroke: var(--accent-color);
-    }
-
-    .file-input {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      opacity: 0;
-      cursor: pointer;
-    }
-
-    .file-info {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      margin-top: 4px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
+    .visually-hidden:where(:not(:focus-within, :active)) {
+      position: absolute !important;
+      clip-path: inset(50%) !important;
+      overflow: hidden !important;
+      width: 1px !important;
+      height: 1px !important;
+      margin: -1px !important;
+      padding: 0 !important;
+      border: 0 !important;
+      white-space: nowrap !important;
     }
 
     /* Grid Layouts */
@@ -715,12 +1011,6 @@
 
     .question-editor-card:hover {
       border-color: var(--border-glow);
-    }
-
-    .readonly-field {
-      background-color: rgba(30, 41, 59, 0.45) !important;
-      cursor: not-allowed;
-      opacity: 0.85;
     }
 
     .q-card-header {
@@ -1329,7 +1619,7 @@
       padding: 24px;
       color: var(--text-primary);
       width: 90%;
-      max-width: 500px;
+      max-width: 540px;
       margin: auto;
       box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
       outline: none;
@@ -1339,9 +1629,15 @@
       overflow-y: auto;
     }
 
+    dialog:modal {
+      overscroll-behavior: contain;
+    }
+
     dialog::backdrop {
       background: rgba(15, 23, 42, 0.7);
       backdrop-filter: blur(6px);
+      overflow: hidden;
+      overscroll-behavior: contain;
     }
 
     .dialog-header {
@@ -1386,6 +1682,8 @@
 
     .toast-success { border-left: 4px solid var(--success); }
     .toast-error { border-left: 4px solid var(--error); }
+    .toast-info { border-left: 4px solid var(--accent-color); }
+    .toast-warning { border-left: 4px solid var(--warning); }
 
     /* Animations */
     @keyframes pulse { 0% { transform: scale(1); } 100% { transform: scale(1.02); } }
@@ -1415,24 +1713,39 @@
   </div>
 
   <!-- Security Settings Bar -->
-  <section class="settings-bar">
+  <section class="settings-bar" aria-label="AI API Settings">
     <div class="settings-bar-container">
       <div class="settings-group">
-        <span>🔐 API Settings:</span>
+        <span>🔐 API:</span>
+        <select id="provider-select" aria-label="AI Provider">
+          <option value="gemini">Google Gemini</option>
+          <option value="openai">OpenAI</option>
+          <option value="groq">Groq</option>
+          <option value="openrouter">OpenRouter</option>
+          <option value="deepseek">DeepSeek</option>
+          <option value="anthropic">Anthropic Claude</option>
+          <option value="nvidia">NVIDIA NIM</option>
+          <option value="custom">Custom / Other</option>
+        </select>
         <div class="settings-input-wrapper">
-          <input type="password" id="api-key-input" placeholder="Enter API Key" aria-label="API Key">
+          <input type="password" id="api-key-input" placeholder="Paste API Key (auto-detects provider)" aria-label="API Key" autocomplete="off" spellcheck="false">
+          <button type="button" id="toggle-key-vis-btn" class="key-vis-btn" aria-label="Show or hide API key" title="Show/Hide API Key">👁️</button>
         </div>
         <select id="model-select" aria-label="Model Selection">
           <!-- Populated dynamically -->
         </select>
-        <button id="clear-key-btn" class="btn btn-secondary" style="padding: 4px 8px; font-size: 0.75rem;">Clear Now</button>
-        <button id="open-config-btn" class="btn btn-secondary" style="padding: 4px 8px; font-size: 0.75rem;">⚙️ Configure</button>
-        <label style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem; cursor: pointer;">
+        <button type="button" id="test-key-btn" class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.78rem;" title="Verify your API key and load live models">⚡ Test &amp; Sync</button>
+        <button type="button" id="clear-key-btn" class="btn btn-secondary" style="padding: 4px 8px; font-size: 0.78rem;">Clear</button>
+        <button type="button" id="open-config-btn" class="btn btn-secondary" style="padding: 4px 8px; font-size: 0.78rem;">⚙️ Configure</button>
+        <label style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem; cursor: pointer;" title="When checked, keys are stored only in sessionStorage and cleared when this tab closes. Uncheck to remember keys in this browser.">
           <input type="checkbox" id="clear-on-close-cb" checked> Clear on Tab Close
         </label>
       </div>
-      <div id="api-security-warning" style="font-size: 0.8rem; color: var(--warning); font-weight: 500;">
-        🛡️ Key stored in sessionStorage (current tab only).
+      <div class="api-status-row">
+        <span id="api-status-pill" class="api-status-pill">No Key Set</span>
+        <div id="api-security-warning" style="font-size: 0.78rem; color: var(--warning); font-weight: 500;">
+          🛡️ Key stored in sessionStorage (clears on tab close).
+        </div>
       </div>
     </div>
   </section>
@@ -1485,123 +1798,99 @@
 
   <!-- Main Content -->
   <main>
-    <!-- SETUP PHASE VIEW -->
-    <section id="setup-view">
-      <!-- Tabs Navigation -->
-      <nav class="tabs-nav" aria-label="Setup Modes">
-        <button class="tab-btn active" id="tab-upload">📄 Upload Files</button>
-        <button class="tab-btn" id="tab-generate">🤖 AI Generate</button>
-      </nav>
-
-      <!-- TAB 1: UPLOAD FILES -->
-      <div id="panel-upload" class="tab-panel">
-        <div class="grid-2col">
-          <!-- Question Sheet -->
-          <div class="glass-panel">
-            <h3 class="mb-4">1. Question Sheet</h3>
-            <p class="text-secondary mb-4" style="font-size: 0.9rem;">Upload a PDF, Image, or Text file containing multiple-choice questions.</p>
-            <div class="drag-drop-zone" id="qp-drop-zone">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
-              </svg>
-              <div>
-                <p>Drag & drop your question sheet here</p>
-                <p class="text-muted" style="font-size: 0.8rem; margin-top: 4px;">Supports PDF, PNG, JPG, TXT</p>
-              </div>
-              <input type="file" id="qp-file-input" class="file-input" accept=".pdf,.txt,.png,.jpg,.jpeg" multiple>
-            </div>
-            <div id="qp-file-info" class="file-info hidden"></div>
-
-            <details class="mt-4">
-              <summary>Or paste text manually</summary>
-              <div class="details-content">
-                <textarea id="qp-manual-text" class="form-control" placeholder="1. What is HTML?&#10;A) ...&#10;B) ..."></textarea>
-              </div>
-            </details>
-          </div>
-
-          <!-- Answer Key -->
-          <div class="glass-panel">
-            <h3 class="mb-4">2. Answer Key</h3>
-            <p class="text-secondary mb-4" style="font-size: 0.9rem;">Upload or paste correct answers. <em>Don't have an answer key? Leave it empty and use "✨ Auto-Solve with AI" on the review screen!</em></p>
-            <div class="drag-drop-zone" id="ak-drop-zone">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
-              </svg>
-              <div>
-                <p>Drag & drop your answer key here</p>
-                <p class="text-muted" style="font-size: 0.8rem; margin-top: 4px;">Supports TXT, CSV, PDF, PNG, JPG</p>
-              </div>
-              <input type="file" id="ak-file-input" class="file-input" accept=".txt,.csv,.pdf,.png,.jpg,.jpeg" multiple>
-            </div>
-            <div id="ak-file-info" class="file-info hidden"></div>
-
-            <details class="mt-4">
-              <summary>Or paste key manually</summary>
-              <div class="details-content">
-                <textarea id="ak-manual-text" class="form-control" placeholder="1.A, 2.C, 3.B&#10;Or CSV:&#10;1,A&#10;2,C"></textarea>
-              </div>
-            </details>
-          </div>
-        </div>
-
-        <div class="glass-panel mt-4 text-center">
-          <div style="margin-bottom: 16px; display: flex; justify-content: center; align-items: center; gap: 8px;">
-            <label style="cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 0.9rem; color: var(--text-secondary);">
-              <input type="checkbox" id="merge-bilingual-cb" checked> Auto-merge bilingual/duplicate question numbers
-            </label>
-          </div>
-          <button id="parse-proceed-btn" class="btn btn-primary" style="padding: 14px 40px; font-weight: 600;">Parse & Proceed</button>
-          <div id="parse-loading" class="hidden mt-4">
-            <div class="flex-center" style="gap: 12px;">
-              <div class="spinner"></div>
-              <span id="parse-progress-text">Processing documents...</span>
-            </div>
-          </div>
+    <!-- SETUP PHASE VIEW (AI GENERATE ONLY) -->
+    <section id="setup-view" class="view-container active">
+      <div class="setup-hero">
+        <div>
+          <h1>🤖 AI Mock Exam &amp; Drill Generator</h1>
+          <p>Exam- and topic-specific practice for Govt Exams — Quant &amp; Speed Math drills, Reasoning, Data Interpretation, and full mocks.</p>
         </div>
       </div>
 
-      <!-- TAB 2: AI GENERATE -->
-      <div id="panel-generate" class="tab-panel hidden">
+      <div id="panel-generate">
         <div class="grid-2col">
           <!-- Parameters Form -->
           <div class="glass-panel">
-            <h3 class="mb-4">AI Question Generator</h3>
-            <div class="form-group">
-              <label for="ai-exam-name">Exam Name / Topic:</label>
-              <input type="text" id="ai-exam-name" class="form-control" placeholder="e.g., CAT, SAT Math, Physics Chapter 3">
-            </div>
-            <div class="form-group">
-              <label for="ai-subjects">Focus Subjects / Chapters (optional):</label>
-              <input type="text" id="ai-subjects" class="form-control" placeholder="e.g., HRM, Financial Derivatives, Algebra">
-            </div>
-            <div class="form-group">
-              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;">
-                <input type="checkbox" id="ai-unlimited-cb" style="width: 16px; height: 16px; cursor: pointer;">
-                Unlimited questions (continuous mode)
-              </label>
-              <small style="color: var(--text-muted); display: block; margin-top: 4px;">Starts with 15 easy questions; more load in the background as you progress.</small>
-            </div>
-            <div class="form-group" id="ai-count-group">
-              <label for="ai-count">Number of Questions (5-100): <span id="ai-count-val" style="font-weight: 600; color: var(--accent-color);">10</span></label>
-              <input type="range" id="ai-count" class="form-control" min="5" max="100" value="10">
-            </div>
-            <div class="form-group" id="ai-difficulty-group">
-              <label for="ai-difficulty">Difficulty Level:</label>
-              <select id="ai-difficulty" class="form-control">
-                <option value="easy">Easy</option>
-                <option value="medium" selected>Medium</option>
-                <option value="hard">Hard</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="ai-style">Question Style:</label>
-              <select id="ai-style" class="form-control">
-                <option value="standard">Standard MCQ</option>
-                <option value="case-study">Include Case Study / Scenario Based</option>
-              </select>
-            </div>
-            <button id="ai-generate-btn" class="btn btn-primary" style="width: 100%; padding: 12px; font-weight: 600;">Generate Questions</button>
+            <h2 class="mb-4" style="font-size: 1.25rem;">Configure Your Practice Set</h2>
+            <form id="ai-generator-form" novalidate>
+              <div class="form-group">
+                <label>Target Exam Pattern (optional):</label>
+                <div class="pill-row" id="exam-preset-pills" role="group" aria-label="Target exam pattern">
+                  <button type="button" class="preset-pill active" data-exam="" data-marking="none">General / Any</button>
+                  <button type="button" class="preset-pill" data-exam="SSC CGL / CHSL" data-marking="ssc">SSC CGL / CHSL</button>
+                  <button type="button" class="preset-pill" data-exam="IBPS / SBI PO & Clerk" data-marking="ibps">IBPS / SBI PO</button>
+                  <button type="button" class="preset-pill" data-exam="RRB NTPC / Railways" data-marking="rrb">RRB NTPC</button>
+                  <button type="button" class="preset-pill" data-exam="UPSC CSAT" data-marking="upsc">UPSC CSAT</button>
+                  <button type="button" class="preset-pill" data-exam="RBI Grade B" data-marking="ibps">RBI Grade B</button>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Section:</label>
+                <div class="pill-row" id="section-preset-pills" role="group" aria-label="Exam section">
+                  <button type="button" class="preset-pill active" data-section="quant">🧮 Quant &amp; Speed Math</button>
+                  <button type="button" class="preset-pill" data-section="reasoning">🧩 Reasoning</button>
+                  <button type="button" class="preset-pill" data-section="di">📊 Data Interpretation</button>
+                  <button type="button" class="preset-pill" data-section="ga">🌍 General Awareness</button>
+                  <button type="button" class="preset-pill" data-section="english">📖 English</button>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="ai-exam-name">Topic / Exact Question Request:</label>
+                <input type="text" id="ai-exam-name" name="examName" class="form-control" required placeholder="e.g., Number squares ending with 5 (two-digit only), Cube roots, Syllogisms" data-error="ai-exam-name-error">
+                <div id="ai-exam-name-error" class="error-msg">
+                  <span role="img" aria-label="Error">⚠️</span> Please enter a topic or specific question request (e.g., Cube roots).
+                </div>
+                <div class="topic-chips" id="dynamic-topic-chips" aria-label="Quick topic suggestions">
+                  <!-- Populated dynamically by selected section -->
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="ai-subjects">Specific Rules / Constraints / Sub-topics (optional):</label>
+                <input type="text" id="ai-subjects" name="subjects" class="form-control" placeholder="e.g., Two-digit only (15–95), perfect cubes 11³–30³, Indian Rupees (₹)">
+              </div>
+
+              <div class="form-group" style="display: flex; flex-direction: column; gap: 10px;">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; margin-bottom: 0;">
+                  <input type="checkbox" id="ai-tricks-cb" checked style="width: 16px; height: 16px; cursor: pointer;">
+                  Include fastest exam shortcut / Vedic trick in explanations
+                </label>
+                <div>
+                  <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; margin-bottom: 0;">
+                    <input type="checkbox" id="ai-unlimited-cb" style="width: 16px; height: 16px; cursor: pointer;">
+                    Unlimited questions (continuous mode)
+                  </label>
+                  <small style="color: var(--text-muted); display: block; margin-top: 4px;">Starts with 15 easy questions; more load automatically in the background with rising difficulty.</small>
+                </div>
+              </div>
+
+              <div class="form-group" id="ai-count-group">
+                <label for="ai-count">Number of Questions (5–100): <span id="ai-count-val" style="font-weight: 600; color: var(--accent-color);">10</span></label>
+                <input type="range" id="ai-count" name="count" class="form-control" min="5" max="100" value="10">
+                <small id="ai-count-batch-note" style="color: var(--text-muted); display: none; margin-top: 4px;">Large sets automatically generate in batches of 20 so responses stay complete and accurate.</small>
+              </div>
+              <div class="form-group" id="ai-difficulty-group">
+                <label for="ai-difficulty">Difficulty Level:</label>
+                <select id="ai-difficulty" name="difficulty" class="form-control">
+                  <option value="easy">Easy (Speed Drill / Prelims Warmup)</option>
+                  <option value="medium" selected>Medium (Prelims / Tier-1 Standard)</option>
+                  <option value="hard">Hard (Mains / Tier-2 Level)</option>
+                  <option value="mixed">Mixed (Easy to Hard)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="ai-style">Question Style:</label>
+                <select id="ai-style" name="style" class="form-control">
+                  <option value="standard">Standard Exam MCQ</option>
+                  <option value="speed-drill">Fast Mental Math / Calculation Drill</option>
+                  <option value="case-study">Caselet / Scenario / Data Set Based</option>
+                  <option value="conceptual">Deep Conceptual &amp; Trap Options</option>
+                </select>
+              </div>
+              <button type="submit" id="ai-generate-btn" class="btn btn-primary" style="width: 100%; padding: 12px; font-weight: 600;">Generate Questions</button>
+            </form>
             
             <div id="generate-loading" class="hidden mt-4">
               <div class="flex-center" style="gap: 12px;">
@@ -1612,10 +1901,19 @@
           </div>
 
           <!-- Saved Sets Panel -->
-          <div class="glass-panel">
-            <h3 class="mb-4">Saved Sets (Max 5)</h3>
-            <div class="saved-sets-list" id="saved-sets-container">
+          <div class="glass-panel" style="display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;">
+              <h2 style="font-size: 1.25rem; margin: 0;">Saved Sets (Max 5)</h2>
+              <div>
+                <button type="button" id="import-set-btn" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;">📥 Import JSON</button>
+                <input type="file" id="import-set-input" accept=".json,application/json" class="hidden" aria-label="Import exported JSON question set">
+              </div>
+            </div>
+            <div class="saved-sets-list" id="saved-sets-container" style="flex: 1;">
               <!-- Load state -->
+            </div>
+            <div class="alert alert-info mt-4" style="margin-bottom: 0; font-size: 0.82rem; padding: 12px;">
+              <span>💡 <strong>Govt Exam Tip:</strong> Pick an Exam Pattern (e.g., SSC CGL / IBPS PO) &amp; Section, or type an exact drill like <em>"number squares ending with 5 two-digit only"</em> or <em>"cube roots"</em>. DI tables render automatically and you get a built-in Rough Sheet + per-question speed tracker!</span>
             </div>
           </div>
         </div>
@@ -1695,6 +1993,16 @@
               <option value="scroll">Scrollable List (All on screen)</option>
             </select>
           </div>
+          <div class="form-group" style="grid-column: 1 / -1;">
+            <label for="exam-marking-scheme">Marking Scheme (Govt Exam Negative Marking):</label>
+            <select id="exam-marking-scheme" class="form-control">
+              <option value="none">No Negative Marking (+1 correct / 0 wrong)</option>
+              <option value="ibps">IBPS / SBI / RBI Pattern (+1 correct / −0.25 wrong)</option>
+              <option value="ssc">SSC CGL / CHSL Pattern (+2 correct / −0.50 wrong)</option>
+              <option value="rrb">RRB NTPC / Railways Pattern (+1 correct / −0.33 wrong)</option>
+              <option value="upsc">UPSC CSAT Pattern (+2.5 correct / −0.83 wrong)</option>
+            </select>
+          </div>
         </div>
 
         <!-- Start Trigger -->
@@ -1764,6 +2072,14 @@
               <button id="continuous-stop-btn" class="btn btn-danger" style="width: 100%; padding: 8px; font-size: 0.85rem; margin-top: 4px;">Stop Generating</button>
             </div>
 
+            <details class="rough-sheet-box" id="rough-sheet-details">
+              <summary>
+                <span>📝 Rough Sheet (Scratchpad)</span>
+              </summary>
+              <textarea id="exam-rough-sheet" class="rough-sheet-textarea" placeholder="Jot quick calculations, squares, ratios, or seating grids here..." aria-label="Exam rough sheet scratchpad"></textarea>
+              <button type="button" id="rough-sheet-clear-btn" class="btn btn-secondary" style="width: 100%; margin-top: 6px; padding: 4px 8px; font-size: 0.76rem;">Clear Rough Sheet</button>
+            </details>
+
             <button id="exam-submit-trigger" class="btn btn-danger" style="width: 100%; font-weight: 600; padding: 12px;">Submit Exam</button>
           </div>
         </aside>
@@ -1773,7 +2089,10 @@
           <!-- Slider view container -->
           <div id="exam-slider-container" class="question-display-card">
             <div class="question-header-row">
-              <div class="question-number-badge" id="exam-q-badge">Question 1</div>
+              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <div class="question-number-badge" id="exam-q-badge">Question 1</div>
+                <span class="q-time-badge" id="exam-q-time-badge" title="Time spent on this question">⏱️ 0s</span>
+              </div>
               <button id="exam-flag-btn" class="flag-btn">
                 <svg viewBox="0 0 24 24">
                   <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>
@@ -1787,16 +2106,21 @@
             <div class="options-stack" id="exam-options-stack"></div>
 
             <div class="exam-nav-buttons">
-              <button id="exam-prev-btn" class="btn btn-secondary">
+              <button type="button" id="exam-prev-btn" class="btn btn-secondary">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <polyline points="15 18 9 12 15 6"/>
                 </svg> Previous
               </button>
-              <button id="exam-next-btn" class="btn btn-secondary">
+              <button type="button" id="exam-next-btn" class="btn btn-secondary">
                 Next <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <polyline points="9 18 15 12 9 6"/>
                 </svg>
               </button>
+            </div>
+            <div class="kbd-hints" aria-hidden="true">
+              <span><kbd>A</kbd>–<kbd>D</kbd> or <kbd>1</kbd>–<kbd>4</kbd> Select</span>
+              <span><kbd>←</kbd> <kbd>→</kbd> Navigate</span>
+              <span><kbd>F</kbd> Flag</span>
             </div>
           </div>
 
@@ -1834,14 +2158,25 @@
               <div class="val results-stat-wrong" id="results-val-wrong">0</div>
               <div class="lbl">Wrong</div>
             </div>
-            <div class="results-stat-box" style="grid-column: span 2;">
+            <div class="results-stat-box">
               <div class="val results-stat-skipped" id="results-val-skipped">0</div>
-              <div class="lbl">Skipped / Unanswered</div>
+              <div class="lbl">Skipped</div>
+            </div>
+            <div class="results-stat-box">
+              <div class="val" style="color: var(--accent-color);" id="results-val-accuracy">0%</div>
+              <div class="lbl">Accuracy</div>
+            </div>
+            <div class="results-stat-box" style="grid-column: span 2;">
+              <div class="val" style="color: var(--text-primary); font-size: 1.1rem;" id="results-val-marks">0 / 0</div>
+              <div class="lbl" id="results-lbl-marks">Net Score</div>
             </div>
           </div>
 
           <div class="mt-4" style="font-size: 0.85rem; color: var(--text-secondary);" id="results-time-spent">
             Time Taken: 00:00
+          </div>
+          <div style="font-size: 0.82rem; color: var(--text-muted); margin-top: 4px;" id="results-avg-speed">
+            Avg Speed: 0s / question
           </div>
 
           <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 20px;">
@@ -1876,42 +2211,42 @@
   <div class="toast-container" id="toast-container"></div>
 
   <!-- DIALOG: CONFIRM SUBMIT -->
-  <dialog id="confirm-submit-dialog">
+  <dialog id="confirm-submit-dialog" closedby="any" aria-labelledby="confirm-submit-title">
     <div class="dialog-header">
-      <span class="dialog-title">Submit Exam?</span>
-      <button class="dialog-close" id="confirm-submit-close-btn">&times;</button>
+      <h2 id="confirm-submit-title" class="dialog-title">Submit Exam?</h2>
+      <button type="button" class="dialog-close" id="confirm-submit-close-btn" aria-label="Close dialog">&times;</button>
     </div>
     <div>
       <p id="confirm-submit-msg">Are you sure you want to submit your exam?</p>
       <p style="color: var(--warning); margin-top: 10px; font-weight: 500;" id="confirm-submit-warning"></p>
     </div>
     <div class="dialog-footer">
-      <button id="confirm-submit-cancel" class="btn btn-secondary">Go Back</button>
-      <button id="confirm-submit-proceed" class="btn btn-danger">Submit Exam</button>
+      <button type="button" id="confirm-submit-cancel" class="btn btn-secondary" autofocus>Go Back</button>
+      <button type="button" id="confirm-submit-proceed" class="btn btn-danger">Submit Exam</button>
     </div>
   </dialog>
 
   <!-- DIALOG: RESUME EXAM -->
-  <dialog id="resume-exam-dialog">
+  <dialog id="resume-exam-dialog" aria-labelledby="resume-exam-title">
     <div class="dialog-header">
-      <span class="dialog-title">Resume Active Session?</span>
+      <h2 id="resume-exam-title" class="dialog-title">Resume Active Session?</h2>
     </div>
     <div>
       <p>An active exam session was found in progress. Would you like to resume where you left off?</p>
     </div>
     <div class="dialog-footer">
-      <button id="resume-discard-btn" class="btn btn-secondary">Discard & Start Over</button>
-      <button id="resume-confirm-btn" class="btn btn-primary">Resume Session</button>
+      <button type="button" id="resume-discard-btn" class="btn btn-secondary">Discard &amp; Start Over</button>
+      <button type="button" id="resume-confirm-btn" class="btn btn-primary" autofocus>Resume Session</button>
     </div>
   </dialog>
 
   <!-- DIALOG: KBC ASK EXPERT -->
-  <dialog id="kbc-expert-dialog" style="max-width: 550px; border: 1.5px solid var(--accent-color); box-shadow: var(--card-shadow);">
+  <dialog id="kbc-expert-dialog" closedby="any" aria-labelledby="kbc-expert-title" style="max-width: 550px; border: 1.5px solid var(--accent-color); box-shadow: var(--card-shadow);">
     <div class="dialog-header">
-      <span class="dialog-title" style="color: var(--accent-color); font-family: var(--font-family-title); display: flex; align-items: center; gap: 8px;">
+      <h2 id="kbc-expert-title" class="dialog-title" style="color: var(--accent-color); font-family: var(--font-family-title); display: flex; align-items: center; gap: 8px;">
         <span>🧠 Ask the Expert (AI Help)</span>
-      </span>
-      <button class="dialog-close" id="kbc-expert-close">&times;</button>
+      </h2>
+      <button type="button" class="dialog-close" id="kbc-expert-close" aria-label="Close dialog">&times;</button>
     </div>
     <div style="padding: 10px 0;">
       <div class="flex-center" id="kbc-expert-loading" style="margin: 20px 0; flex-direction: column; gap: 12px;">
@@ -1929,17 +2264,15 @@
       </div>
     </div>
     <div class="dialog-footer">
-      <button id="kbc-expert-ok-btn" class="btn btn-primary" style="padding: 8px 24px;">Thank you, Expert!</button>
+      <button type="button" id="kbc-expert-ok-btn" class="btn btn-primary" style="padding: 8px 24px;">Thank you, Expert!</button>
     </div>
   </dialog>
 
-
-
   <!-- DIALOG: SETTINGS / EXAM CONFIGURATION -->
-  <dialog id="exam-config-dialog">
+  <dialog id="exam-config-dialog" closedby="any" aria-labelledby="exam-config-title">
     <div class="dialog-header">
-      <span class="dialog-title">System Settings & Config</span>
-      <button class="dialog-close" id="config-close-btn">&times;</button>
+      <h2 id="exam-config-title" class="dialog-title">System Settings &amp; API Config</h2>
+      <button type="button" class="dialog-close" id="config-close-btn" aria-label="Close dialog">&times;</button>
     </div>
     <div class="form-group">
       <label for="config-pass-percent">Passing Percentage (%):</label>
@@ -1948,27 +2281,34 @@
     <div class="form-group">
       <label for="settings-preset">API Provider Preset:</label>
       <select id="settings-preset" class="form-control">
-        <option value="openai">OpenAI</option>
         <option value="gemini">Google Gemini (AI Studio)</option>
-        <option value="openrouter">OpenRouter (Claude, Llama, etc.)</option>
+        <option value="openai">OpenAI</option>
         <option value="groq">Groq</option>
-        <option value="nvidia">NVIDIA NIM</option>
+        <option value="openrouter">OpenRouter (Multi-Model)</option>
         <option value="deepseek">DeepSeek</option>
-        <option value="anthropic">Anthropic Claude (Direct/Proxy)</option>
-        <option value="custom">Custom / Other</option>
+        <option value="anthropic">Anthropic Claude (Direct Browser)</option>
+        <option value="nvidia">NVIDIA NIM (Requires CORS Proxy)</option>
+        <option value="custom">Custom / OpenAI-Compatible</option>
       </select>
     </div>
     <div class="form-group">
-      <label for="modal-api-key-input">API Key (session storage):</label>
-      <input type="password" id="modal-api-key-input" class="form-control" placeholder="Paste your API Key here">
+      <label for="modal-api-key-input">API Key (stored per provider):</label>
+      <div style="display: flex; gap: 8px;">
+        <input type="password" id="modal-api-key-input" class="form-control" placeholder="Paste your API Key here" autocomplete="off" spellcheck="false" autofocus>
+        <button type="button" id="modal-test-key-btn" class="btn btn-secondary" style="white-space: nowrap;">⚡ Test Key</button>
+      </div>
+      <div id="modal-test-result" style="font-size: 0.82rem; margin-top: 8px; display: none;"></div>
     </div>
     <div class="form-group">
       <label for="settings-endpoint">API Endpoint URL:</label>
-      <input type="url" id="settings-endpoint" class="form-control" placeholder="e.g. https://api.openai.com/v1/chat/completions">
+      <input type="url" id="settings-endpoint" class="form-control" required placeholder="e.g. https://generativelanguage.googleapis.com/v1beta/openai/chat/completions" data-error="settings-endpoint-error">
+      <div id="settings-endpoint-error" class="error-msg">
+        <span role="img" aria-label="Error">⚠️</span> Enter a valid API endpoint URL starting with https:// or http://.
+      </div>
     </div>
     <div class="form-group">
       <label for="settings-custom-model">Custom Model ID (Overrides dropdown selection if set):</label>
-      <input type="text" id="settings-custom-model" class="form-control" placeholder="e.g. meta-llama/llama-3.3-70b-instruct">
+      <input type="text" id="settings-custom-model" class="form-control" placeholder="e.g. gemini-3.8-flash or meta-llama/llama-3.3-70b-instruct">
     </div>
     <div class="form-group">
       <label for="settings-headers">Custom Headers (JSON, optional):</label>
@@ -1991,8 +2331,12 @@
       <label for="settings-prompt">System Prompt for AI Tutor:</label>
       <textarea id="settings-prompt" class="form-control" rows="3"></textarea>
     </div>
-    <div class="dialog-footer">
-      <button id="config-save-btn" class="btn btn-success">Save Settings</button>
+    <div class="dialog-footer" style="justify-content: space-between;">
+      <button type="button" id="modal-reset-preset-btn" class="btn btn-secondary" style="font-size: 0.82rem;">↺ Reset Preset Defaults</button>
+      <div style="display: flex; gap: 10px;">
+        <button type="button" id="config-cancel-btn" class="btn btn-secondary">Cancel</button>
+        <button type="button" id="config-save-btn" class="btn btn-success">Save Settings</button>
+      </div>
     </div>
   </dialog>
 
@@ -2002,7 +2346,162 @@
     let questions = []; // Array of Question objects
     let userSelections = {}; // { qNum: letter }
     let flaggedQuestions = new Set(); // Set of flagged qNums
-    let answersMatched = {}; // { qNum: letter } from upload mode
+    let questionTimeSpent = {}; // { qNum: seconds }
+    let selectedTargetExam = '';
+    let selectedSection = 'quant';
+
+    // Govt Exam Negative Marking Presets
+    const MARKING_SCHEMES = {
+      none: { label: 'No Negative Marking', correct: 1, wrong: 0 },
+      ibps: { label: 'IBPS / SBI / RBI (+1 / −0.25)', correct: 1, wrong: 0.25 },
+      ssc:  { label: 'SSC CGL / CHSL (+2 / −0.50)', correct: 2, wrong: 0.5 },
+      rrb:  { label: 'RRB NTPC (+1 / −0.33)', correct: 1, wrong: 1 / 3 },
+      upsc: { label: 'UPSC CSAT (+2.5 / −0.83)', correct: 2.5, wrong: 2.5 / 3 }
+    };
+
+    // Section-wise Govt Exam & Speed Math Quick Topic Presets
+    const SECTION_TOPIC_PRESETS = {
+      quant: [
+        {
+          label: 'Squares ending in 5 (2-digit)',
+          topic: 'Number squares ending with 5 (two-digit only)',
+          rules: 'Use ONLY two-digit numbers ending in 5 (15, 25, 35, 45, 55, 65, 75, 85, 95). If >9 questions, vary angles: direct square, reverse square root of numbers ending in 25, sum/difference of two squares, missing digit.',
+          style: 'speed-drill'
+        },
+        {
+          label: 'Cube Roots',
+          topic: 'Cube roots of perfect cubes',
+          rules: 'Perfect cubes from 11³ to 35³ (e.g., 1728 to 42875). Include unit-digit & grouping shortcut trick in explanation.',
+          style: 'speed-drill'
+        },
+        {
+          label: '2-Digit Squares (11–99)',
+          topic: 'Squares of two-digit numbers (11 to 99)',
+          rules: 'Two-digit numbers from 11 to 99 only. Include close calculation-trap distractors and base-method mental shortcut.',
+          style: 'speed-drill'
+        },
+        {
+          label: 'Simplification & BODMAS',
+          topic: 'Simplification, Approximation & BODMAS',
+          rules: 'Fast govt-exam arithmetic with fractions, squares, cubes, roots, and percentages.',
+          style: 'speed-drill'
+        },
+        {
+          label: 'Percentages & Fractions',
+          topic: 'Percentage & Fraction Equivalents',
+          rules: 'Successive % change, fraction-to-percent ratios (1/6, 1/7, 1/8, 1/9, 1/12), election/consumption problems.',
+          style: 'standard'
+        },
+        {
+          label: 'Profit, Loss & Discount',
+          topic: 'Profit, Loss & Discount',
+          rules: 'Markup %, successive discounts, dishonest shopkeeper, ratio method shortcuts.',
+          style: 'standard'
+        },
+        {
+          label: 'Time, Speed & Distance',
+          topic: 'Time, Speed, Distance & Trains',
+          rules: 'Relative speed, average speed, platform/train crossing, boats & streams.',
+          style: 'standard'
+        },
+        {
+          label: 'Time & Work',
+          topic: 'Time & Work and Pipes & Cisterns',
+          rules: 'LCM efficiency method, alternate days, men-days-hours formula.',
+          style: 'standard'
+        },
+        {
+          label: 'Number Series',
+          topic: 'Number Series (Missing & Wrong Number)',
+          rules: 'Square/cube ± n, prime differences, double difference, alternate series.',
+          style: 'speed-drill'
+        }
+      ],
+      reasoning: [
+        {
+          label: 'Syllogisms',
+          topic: 'Syllogisms (Statements & Conclusions)',
+          rules: 'Include Only a few, Some not, Possibility cases; unambiguous Venn diagram deduction.',
+          style: 'standard'
+        },
+        {
+          label: 'Blood Relations',
+          topic: 'Blood Relations (Pointing & Coded)',
+          rules: 'Family tree & coded symbols (A + B means A is father of B).',
+          style: 'standard'
+        },
+        {
+          label: 'Coding-Decoding',
+          topic: 'Coding-Decoding (Letter, Number & Chinese)',
+          rules: 'Alphabetical positional shifts, opposite pairs, and substitution coding.',
+          style: 'standard'
+        },
+        {
+          label: 'Seating Arrangement',
+          topic: 'Linear & Circular Seating Arrangement',
+          rules: '6 to 8 persons facing center/north with clear, uniquely solvable clues.',
+          style: 'case-study'
+        },
+        {
+          label: 'Direction Sense',
+          topic: 'Direction & Distance Sense',
+          rules: 'Shortest Pythagorean distance, turns, shadow-based direction problems.',
+          style: 'standard'
+        },
+        {
+          label: 'Inequalities',
+          topic: 'Coded & Direct Mathematical Inequalities',
+          rules: 'Either-Or cases, direct symbol chains (>, ≥, =, <, ≤).',
+          style: 'speed-drill'
+        }
+      ],
+      di: [
+        {
+          label: 'Table DI (Sales & Production)',
+          topic: 'Table Data Interpretation (Company Sales & Production)',
+          rules: 'Include a clean Markdown table in each question with cleanly divisible numbers; test %, ratio, average, and difference.',
+          style: 'case-study'
+        },
+        {
+          label: 'Percentage & Ratio DI',
+          topic: 'Data Interpretation (Percentage Distribution & Ratios)',
+          rules: 'Include a clean Markdown table with male/female or department ratios and total counts; test quick ratio/percentage shortcuts.',
+          style: 'case-study'
+        },
+        {
+          label: 'Income & Expenditure DI',
+          topic: 'Income, Expenditure & Profit % Data Interpretation',
+          rules: 'Include a clean Markdown table across 5 years (in ₹ Crores); use Profit % = ((Income − Expenditure) / Expenditure) × 100.',
+          style: 'case-study'
+        },
+        {
+          label: 'Caselet DI',
+          topic: 'Caselet Data Interpretation (Word-Based Data)',
+          rules: 'Short structured paragraph with 3–4 linked numerical facts (Venn or table solvable) followed by a sharp calculation question.',
+          style: 'case-study'
+        },
+        {
+          label: 'Missing Data Table DI',
+          topic: 'Missing Data Table Interpretation',
+          rules: 'Include a Markdown table with 1–2 missing cells marked "-" solvable from totals/averages given in the question.',
+          style: 'case-study'
+        }
+      ],
+      ga: [
+        { label: 'Indian Polity', topic: 'Indian Polity & Constitution', rules: 'Articles, Amendments, Parliament, Fundamental Rights, Judiciary.', style: 'standard' },
+        { label: 'Modern History', topic: 'Modern Indian History & Freedom Struggle', rules: '1857 to 1947 events, Acts, Governor-Generals, Movements.', style: 'standard' },
+        { label: 'Indian Economy & Banking', topic: 'Indian Economy, RBI & Banking Awareness', rules: 'Monetary policy, Repo/CRR/SLR, Inflation, Budget, Five-Year Plans.', style: 'standard' },
+        { label: 'Geography & Static GK', topic: 'Indian Geography & Static GK', rules: 'Rivers, National Parks, Passes, Classical Dances, Awards.', style: 'standard' },
+        { label: 'General Science', topic: 'General Science (Physics, Chemistry, Biology)', rules: 'Everyday science, vitamins/diseases, SI units, chemical formulas.', style: 'standard' }
+      ],
+      english: [
+        { label: 'Error Spotting', topic: 'Grammar & Error Spotting', rules: 'Subject-verb agreement, tenses, prepositions, conditionals, modifiers.', style: 'standard' },
+        { label: 'Idioms & Phrases', topic: 'Idioms, Phrases & Phrasal Verbs', rules: 'High-frequency SSC & Banking exam idioms with clear contextual meaning.', style: 'standard' },
+        { label: 'One-Word Substitution', topic: 'One-Word Substitution', rules: 'Classic SSC CGL vocabulary & root-word memory tips in explanation.', style: 'standard' },
+        { label: 'Synonyms & Antonyms', topic: 'Synonyms & Antonyms', rules: 'High-frequency competitive exam vocabulary with usage clues.', style: 'standard' },
+        { label: 'Para Jumbles', topic: 'Sentence Rearrangement / Para Jumbles', rules: '4 sentences (P, Q, R, S) with clear logical connectors.', style: 'standard' }
+      ]
+    };
     
     // Exam parameters
     let currentQuestionIdx = 0;
@@ -2031,73 +2530,121 @@
     let continuousGenerating = false;
     let continuousStopped = false;
     let continuousAbortController = null;
-    
-    // Provider preset details mapping
+
+    // Session-cached live models fetched via "Test & Sync" per provider
+    const liveProviderModels = {};
+
+    // Provider preset details mapping (up-to-date endpoints, headers, and active models)
     const PROVIDER_PRESETS = {
-      openai: {
-        name: 'OpenAI',
-        endpoint: 'https://api.openai.com/v1/chat/completions',
-        placeholder: 'Enter OpenAI API Key',
-        info: '🛡️ Key stored in sessionStorage (current tab only). Sent directly to OpenAI.',
-        authHeader: 'Authorization',
-        authPrefix: 'Bearer ',
-        headers: '{\n  "Content-Type": "application/json"\n}',
-        models: [
-          { value: 'gpt-4o-mini', label: 'gpt-4o-mini (Recommended)' },
-          { value: 'gpt-4o', label: 'gpt-4o' },
-          { value: 'o3-mini', label: 'o3-mini' },
-          { value: 'gpt-3.5-turbo', label: 'gpt-3.5-turbo' }
-        ]
-      },
       gemini: {
         name: 'Google Gemini (AI Studio)',
         endpoint: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
-        placeholder: 'Enter Gemini API Key',
-        info: '🛡️ Key stored in sessionStorage (current tab only). Sent directly to Google AI Studio.',
+        modelsEndpoint: 'https://generativelanguage.googleapis.com/v1beta/models',
+        modelsAuthHeader: 'x-goog-api-key',
+        modelsAuthPrefix: '',
+        placeholder: 'Enter Gemini API Key (AIza...)',
+        info: 'Direct browser access to Google AI Studio.',
         authHeader: 'Authorization',
         authPrefix: 'Bearer ',
         headers: '{\n  "Content-Type": "application/json"\n}',
         models: [
-          { value: 'gemini-2.5-flash', label: 'gemini-2.5-flash (Recommended)' },
-          { value: 'gemini-1.5-flash', label: 'gemini-1.5-flash' },
-          { value: 'gemini-2.5-pro', label: 'gemini-2.5-pro' },
-          { value: 'gemini-1.5-pro', label: 'gemini-1.5-pro' }
+          { value: 'gemini-3.8-flash', label: 'gemini-3.8-flash (Recommended)' },
+          { value: 'gemini-3.5-flash-lite', label: 'gemini-3.5-flash-lite (Fast & Budget)' },
+          { value: 'gemini-3.6-flash', label: 'gemini-3.6-flash' },
+          { value: 'gemini-4-argon', label: 'gemini-4-argon (Flagship)' },
+          { value: 'gemini-2.5-flash', label: 'gemini-2.5-flash (Legacy)' }
         ]
       },
-      openrouter: {
-        name: 'OpenRouter',
-        endpoint: 'https://openrouter.ai/api/v1/chat/completions',
-        placeholder: 'Enter OpenRouter API Key',
-        info: '🛡️ Key stored in sessionStorage (current tab only). Sent directly to OpenRouter.',
+      openai: {
+        name: 'OpenAI',
+        endpoint: 'https://api.openai.com/v1/chat/completions',
+        modelsEndpoint: 'https://api.openai.com/v1/models',
+        placeholder: 'Enter OpenAI API Key (sk-...)',
+        info: 'Direct browser access to OpenAI API.',
         authHeader: 'Authorization',
         authPrefix: 'Bearer ',
-        headers: '{\n  "Content-Type": "application/json",\n  "HTTP-Referer": "https://prepmaster.app",\n  "X-Title": "PrepMaster"\n}',
+        headers: '{\n  "Content-Type": "application/json"\n}',
         models: [
-          { value: 'google/gemini-2.5-flash', label: 'gemini-2.5-flash (via OpenRouter)' },
-          { value: 'anthropic/claude-3.5-sonnet', label: 'claude-3.5-sonnet (via OpenRouter)' },
-          { value: 'meta-llama/llama-3.3-70b-instruct', label: 'llama-3.3-70b (via OpenRouter)' },
-          { value: 'deepseek/deepseek-chat', label: 'deepseek-chat (via OpenRouter)' }
+          { value: 'gpt-6-luna', label: 'gpt-6-luna (Fast & Recommended)' },
+          { value: 'gpt-6.2-sol', label: 'gpt-6.2-sol (Balanced)' },
+          { value: 'gpt-6.1-terra', label: 'gpt-6.1-terra' },
+          { value: 'gpt-5-mini', label: 'gpt-5-mini' },
+          { value: 'gpt-4o-mini', label: 'gpt-4o-mini' },
+          { value: 'gpt-4o', label: 'gpt-4o' }
         ]
       },
       groq: {
         name: 'Groq',
         endpoint: 'https://api.groq.com/openai/v1/chat/completions',
-        placeholder: 'Enter Groq API Key',
-        info: '🛡️ Key stored in sessionStorage (current tab only). Sent directly to Groq.',
+        modelsEndpoint: 'https://api.groq.com/openai/v1/models',
+        placeholder: 'Enter Groq API Key (gsk_...)',
+        info: 'Ultra-fast direct browser access to Groq.',
         authHeader: 'Authorization',
         authPrefix: 'Bearer ',
         headers: '{\n  "Content-Type": "application/json"\n}',
         models: [
-          { value: 'llama-3.3-70b-versatile', label: 'llama-3.3-70b-versatile' },
-          { value: 'llama-3.1-8b-instant', label: 'llama-3.1-8b-instant' },
-          { value: 'mixtral-8x7b-32768', label: 'mixtral-8x7b-32768' }
+          { value: 'llama-3.3-70b-versatile', label: 'llama-3.3-70b-versatile (Recommended)' },
+          { value: 'llama-3.1-8b-instant', label: 'llama-3.1-8b-instant (Ultra-Fast)' },
+          { value: 'qwen/qwen3-32b', label: 'qwen/qwen3-32b' },
+          { value: 'openai/gpt-oss-120b', label: 'openai/gpt-oss-120b' }
+        ]
+      },
+      openrouter: {
+        name: 'OpenRouter',
+        endpoint: 'https://openrouter.ai/api/v1/chat/completions',
+        modelsEndpoint: 'https://openrouter.ai/api/v1/models',
+        placeholder: 'Enter OpenRouter Key (sk-or-...)',
+        info: 'Direct browser access to 100+ models via OpenRouter.',
+        authHeader: 'Authorization',
+        authPrefix: 'Bearer ',
+        headers: '{\n  "Content-Type": "application/json",\n  "X-Title": "PrepMaster AI"\n}',
+        models: [
+          { value: 'google/gemini-3.8-flash', label: 'gemini-3.8-flash (OpenRouter)' },
+          { value: 'anthropic/claude-sonnet-5.5', label: 'claude-sonnet-5.5 (OpenRouter)' },
+          { value: 'openai/gpt-6-luna', label: 'gpt-6-luna (OpenRouter)' },
+          { value: 'meta-llama/llama-3.3-70b-instruct', label: 'llama-3.3-70b (OpenRouter)' },
+          { value: 'deepseek/deepseek-chat', label: 'deepseek-chat (OpenRouter)' },
+          { value: 'openrouter/auto', label: 'openrouter/auto (Best Available)' }
+        ]
+      },
+      deepseek: {
+        name: 'DeepSeek',
+        endpoint: 'https://api.deepseek.com/chat/completions',
+        modelsEndpoint: 'https://api.deepseek.com/models',
+        placeholder: 'Enter DeepSeek API Key (sk-...)',
+        info: 'Direct browser access to DeepSeek API.',
+        authHeader: 'Authorization',
+        authPrefix: 'Bearer ',
+        headers: '{\n  "Content-Type": "application/json"\n}',
+        models: [
+          { value: 'deepseek-chat', label: 'deepseek-chat (Recommended)' },
+          { value: 'deepseek-flash', label: 'deepseek-flash' },
+          { value: 'deepseek-reasoner', label: 'deepseek-reasoner' },
+          { value: 'deepseek-v4-pro', label: 'deepseek-v4-pro' }
+        ]
+      },
+      anthropic: {
+        name: 'Anthropic Claude (Direct)',
+        endpoint: 'https://api.anthropic.com/v1/messages',
+        modelsEndpoint: 'https://api.anthropic.com/v1/models',
+        placeholder: 'Enter Claude API Key (sk-ant-...)',
+        info: 'Direct browser access enabled via anthropic-dangerous-direct-browser-access.',
+        authHeader: 'x-api-key',
+        authPrefix: '',
+        headers: '{\n  "Content-Type": "application/json",\n  "anthropic-version": "2023-06-01",\n  "anthropic-dangerous-direct-browser-access": "true"\n}',
+        models: [
+          { value: 'claude-sonnet-5.5', label: 'claude-sonnet-5.5 (Recommended)' },
+          { value: 'claude-haiku-5.5', label: 'claude-haiku-5.5 (Fast)' },
+          { value: 'claude-opus-5.5', label: 'claude-opus-5.5' },
+          { value: 'claude-sonnet-4-5', label: 'claude-sonnet-4-5' }
         ]
       },
       nvidia: {
         name: 'NVIDIA NIM',
         endpoint: 'https://integrate.api.nvidia.com/v1/chat/completions',
-        placeholder: 'Enter NVIDIA NIM API Key',
-        info: '🛡️ Key stored in sessionStorage (current tab only). Sent directly to NVIDIA NIM.',
+        modelsEndpoint: 'https://integrate.api.nvidia.com/v1/models',
+        placeholder: 'Enter NVIDIA NIM Key (nvapi-...)',
+        info: '⚠️ NVIDIA NIM blocks direct browser CORS requests. Use a CORS proxy URL or OpenRouter.',
         authHeader: 'Authorization',
         authPrefix: 'Bearer ',
         headers: '{\n  "Content-Type": "application/json"\n}',
@@ -2106,38 +2653,12 @@
           { value: 'nvidia/llama-3.1-nemotron-70b-instruct', label: 'llama-3.1-nemotron-70b-instruct' }
         ]
       },
-      deepseek: {
-        name: 'DeepSeek',
-        endpoint: 'https://api.deepseek.com/chat/completions',
-        placeholder: 'Enter DeepSeek API Key',
-        info: '🛡️ Key stored in sessionStorage (current tab only). Sent directly to DeepSeek.',
-        authHeader: 'Authorization',
-        authPrefix: 'Bearer ',
-        headers: '{\n  "Content-Type": "application/json"\n}',
-        models: [
-          { value: 'deepseek-chat', label: 'deepseek-chat' },
-          { value: 'deepseek-reasoner', label: 'deepseek-reasoner' }
-        ]
-      },
-      anthropic: {
-        name: 'Anthropic Claude (Direct/Proxy)',
-        endpoint: 'https://api.anthropic.com/v1/messages',
-        placeholder: 'Enter Claude API Key',
-        info: '⚠️ Native browser requests to Anthropic direct will fail due to CORS. Recommend OpenRouter, or use a CORS proxy.',
-        authHeader: 'x-api-key',
-        authPrefix: '',
-        headers: '{\n  "Content-Type": "application/json",\n  "anthropic-version": "2023-06-01",\n  "anthropic-danger-out-of-band-requests-allowed": "true"\n}',
-        models: [
-          { value: 'claude-3-5-sonnet-20241022', label: 'claude-3-5-sonnet' },
-          { value: 'claude-3-5-haiku-20241022', label: 'claude-3-5-haiku' },
-          { value: 'claude-3-opus-20240229', label: 'claude-3-opus' }
-        ]
-      },
       custom: {
         name: 'Custom / Other',
         endpoint: 'https://api.openai.com/v1/chat/completions',
+        modelsEndpoint: '',
         placeholder: 'Enter API Key',
-        info: '🛡️ Key stored in sessionStorage (current tab only). Sent directly to custom endpoint.',
+        info: 'Sent directly to your custom OpenAI-compatible or Gemini endpoint.',
         authHeader: 'Authorization',
         authPrefix: 'Bearer ',
         headers: '{\n  "Content-Type": "application/json"\n}',
@@ -2147,18 +2668,34 @@
       }
     };
 
+    // Retired/deprecated models automatically migrated to working defaults
+    const RETIRED_MODEL_MAP = {
+      'gemini-1.5-flash': 'gemini-3.8-flash',
+      'gemini-1.5-pro': 'gemini-3.8-flash',
+      'gemini-1.5-flash-8b': 'gemini-3.5-flash-lite',
+      'gemini-2.0-flash': 'gemini-3.8-flash',
+      'gemini-2.5-pro': 'gemini-3.8-flash',
+      'mixtral-8x7b-32768': 'llama-3.3-70b-versatile',
+      'claude-3-5-sonnet-20241022': 'claude-sonnet-5.5',
+      'claude-3-5-haiku-20241022': 'claude-haiku-5.5',
+      'claude-3-opus-20240229': 'claude-opus-5.5',
+      'gpt-3.5-turbo': 'gpt-4o-mini',
+      'google/gemini-2.5-flash': 'google/gemini-3.8-flash',
+      'anthropic/claude-3.5-sonnet': 'anthropic/claude-sonnet-5.5'
+    };
+
     // Preferences & Settings defaults
     const preferences = {
       theme: 'dark',
       defaultTimerMins: 30,
-      modelChoice: 'gpt-4o-mini',
+      modelChoice: 'gemini-3.8-flash',
       clearOnClose: true,
       passPercent: 50,
-      apiEndpoint: 'https://api.openai.com/v1/chat/completions',
+      apiEndpoint: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
       systemPrompt: 'You are a helpful and concise AI exam tutor. Explain why the correct option is right and others are wrong in ONE short paragraph (max 3 sentences). Do not show step-by-step calculations unless absolutely necessary.',
-      preset: 'openai',
+      preset: 'gemini',
       customModel: '',
-      customHeaders: '',
+      customHeaders: '{\n  "Content-Type": "application/json"\n}',
       authHeaderName: 'Authorization',
       authHeaderPrefix: 'Bearer '
     };
@@ -2168,130 +2705,289 @@
       loadPreferences();
       loadApiSettings();
       initThemeToggle();
-      initTabNavigation();
-      initDragAndDrop();
       initFormSliders();
+      initExamAndSectionPresets();
+      initDialogLightDismissFallback();
+      initAccessibleFormValidation();
+      initExamKeyboardShortcuts();
       initButtonListeners();
       renderSavedSetsList();
       checkSavedState();
     });
 
-    // --- SECURE STORAGE OPERATIONS ---
-    
-    // Secure Session Storage Key Handling
-    function getApiKey() {
-      return sessionStorage.getItem('openai_api_key') || '';
+    // --- SECURE STORAGE & KEY OPERATIONS ---
+
+    const API_KEYS_STORAGE_NAME = 'prepmaster_api_keys_v2';
+
+    function getActiveKeyStorage() {
+      return preferences.clearOnClose ? sessionStorage : localStorage;
     }
 
-    function setApiKey(key) {
-      if (key) {
-        sessionStorage.setItem('openai_api_key', key);
-      } else {
+    function readApiKeyMap() {
+      const storage = getActiveKeyStorage();
+      try {
+        const raw = storage.getItem(API_KEYS_STORAGE_NAME);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === 'object') return parsed;
+        }
+      } catch (e) {}
+      return {};
+    }
+
+    function writeApiKeyMap(map) {
+      const storage = getActiveKeyStorage();
+      try {
+        storage.setItem(API_KEYS_STORAGE_NAME, JSON.stringify(map));
+      } catch (e) {}
+    }
+
+    // Migrate legacy single-slot key if present
+    function migrateLegacyApiKey() {
+      const legacy = sessionStorage.getItem('openai_api_key');
+      if (legacy) {
+        const detected = detectProviderFromKey(legacy) || preferences.preset || 'openai';
+        const map = readApiKeyMap();
+        if (!map[detected]) {
+          map[detected] = legacy.trim();
+          writeApiKeyMap(map);
+        }
         sessionStorage.removeItem('openai_api_key');
       }
     }
 
-    // Dynamic UI Config according to Preset selection
-    function refreshUIForPreset(presetKey, isInitialLoad = false) {
-      const preset = PROVIDER_PRESETS[presetKey] || PROVIDER_PRESETS.openai;
-      
-      const keyInput = document.getElementById('api-key-input');
-      keyInput.placeholder = preset.placeholder;
-      
-      const modalKeyInput = document.getElementById('modal-api-key-input');
-      if (modalKeyInput) {
-        modalKeyInput.placeholder = preset.placeholder;
+    function getApiKey(presetKey = preferences.preset) {
+      const map = readApiKeyMap();
+      return (map[presetKey] || '').trim();
+    }
+
+    function setApiKey(key, presetKey = preferences.preset) {
+      const clean = (key || '').trim();
+      const map = readApiKeyMap();
+      if (clean) {
+        map[presetKey] = clean;
+      } else {
+        delete map[presetKey];
       }
-      
+      writeApiKeyMap(map);
+      // Ensure the inactive storage doesn't hold stale keys
+      const otherStorage = preferences.clearOnClose ? localStorage : sessionStorage;
+      otherStorage.removeItem(API_KEYS_STORAGE_NAME);
+    }
+
+    function migrateKeyStorageMode(clearOnClose) {
+      const fromStorage = clearOnClose ? localStorage : sessionStorage;
+      const toStorage = clearOnClose ? sessionStorage : localStorage;
+      const existing = fromStorage.getItem(API_KEYS_STORAGE_NAME);
+      if (existing) {
+        toStorage.setItem(API_KEYS_STORAGE_NAME, existing);
+        fromStorage.removeItem(API_KEYS_STORAGE_NAME);
+      }
+      updateApiSecurityNotice();
+    }
+
+    function detectProviderFromKey(key) {
+      const k = (key || '').trim();
+      if (!k || k.length < 10) return null;
+      if (k.startsWith('AIza')) return 'gemini';
+      if (k.startsWith('gsk_')) return 'groq';
+      if (k.startsWith('sk-or-')) return 'openrouter';
+      if (k.startsWith('sk-ant-')) return 'anthropic';
+      if (k.startsWith('nvapi-')) return 'nvidia';
+      if (k.startsWith('sk-proj-') || k.startsWith('sk-svcacct-')) return 'openai';
+      return null;
+    }
+
+    function setApiStatus(state, text) {
+      const pill = document.getElementById('api-status-pill');
+      if (!pill) return;
+      pill.classList.remove('status-ok', 'status-err', 'status-testing');
+      if (state === 'ok') pill.classList.add('status-ok');
+      else if (state === 'err') pill.classList.add('status-err');
+      else if (state === 'testing') pill.classList.add('status-testing');
+      pill.textContent = text;
+    }
+
+    function updateApiSecurityNotice() {
+      const preset = PROVIDER_PRESETS[preferences.preset] || PROVIDER_PRESETS.gemini;
       const warningEl = document.getElementById('api-security-warning');
-      if (warningEl) {
-        warningEl.textContent = preset.info;
-      }
-      
-      if (!isInitialLoad) {
-        document.getElementById('settings-endpoint').value = preset.endpoint;
-        document.getElementById('settings-headers').value = preset.headers;
-        document.getElementById('settings-auth-header').value = preset.authHeader;
-        document.getElementById('settings-auth-prefix').value = preset.authPrefix;
-      }
-      
+      if (!warningEl) return;
+      const storageNote = preferences.clearOnClose
+        ? '🛡️ Key clears on tab close.'
+        : '💾 Key remembered in browser.';
+      warningEl.textContent = `${storageNote} ${preset.info}`;
+    }
+
+    function populateModelSelect(presetKey, preferredModel = '') {
+      const preset = PROVIDER_PRESETS[presetKey] || PROVIDER_PRESETS.gemini;
       const select = document.getElementById('model-select');
-      const savedVal = select.value || preferences.modelChoice;
+      if (!select) return;
+
+      const customModelVal = (preferences.customModel || '').trim();
+      const liveModels = liveProviderModels[presetKey] || [];
+      const currentTarget = customModelVal || preferredModel || select.value || preferences.modelChoice;
+
       select.innerHTML = '';
-      
-      preset.models.forEach(modelOpt => {
-        const opt = document.createElement('option');
-        opt.value = modelOpt.value;
-        opt.textContent = modelOpt.label;
-        select.appendChild(opt);
-      });
-      
-      const customModelVal = document.getElementById('settings-custom-model').value.trim();
+
       if (customModelVal) {
         const opt = document.createElement('option');
         opt.value = customModelVal;
         opt.textContent = `Custom: ${customModelVal}`;
         select.appendChild(opt);
-        select.value = customModelVal;
-      } else {
-        const hasChoice = preset.models.some(m => m.value === savedVal);
-        if (hasChoice) {
-          select.value = savedVal;
-        } else if (preset.models.length > 0) {
-          select.value = preset.models[0].value;
+      }
+
+      const curatedGroup = liveModels.length > 0 ? document.createElement('optgroup') : select;
+      if (liveModels.length > 0) curatedGroup.label = 'Recommended';
+
+      const curatedIds = new Set();
+      preset.models.forEach(modelOpt => {
+        curatedIds.add(modelOpt.value);
+        const opt = document.createElement('option');
+        opt.value = modelOpt.value;
+        opt.textContent = modelOpt.label;
+        curatedGroup.appendChild(opt);
+      });
+      if (liveModels.length > 0) select.appendChild(curatedGroup);
+
+      if (liveModels.length > 0) {
+        const extraModels = liveModels.filter(m => !curatedIds.has(m));
+        if (extraModels.length > 0) {
+          const liveGroup = document.createElement('optgroup');
+          liveGroup.label = `Available on Your Key (${extraModels.length})`;
+          extraModels.forEach(modelId => {
+            const opt = document.createElement('option');
+            opt.value = modelId;
+            opt.textContent = modelId;
+            liveGroup.appendChild(opt);
+          });
+          select.appendChild(liveGroup);
         }
       }
-      
+
+      const allOptions = Array.from(select.options).map(o => o.value);
+      if (customModelVal && allOptions.includes(customModelVal)) {
+        select.value = customModelVal;
+      } else if (currentTarget && allOptions.includes(currentTarget)) {
+        select.value = currentTarget;
+      } else if (select.options.length > 0) {
+        select.value = select.options[0].value;
+      }
+
       preferences.modelChoice = select.value;
     }
 
-    // Never log API Key or display plain text
+    function applyPresetToActivePreferences(presetKey, preserveKey = false) {
+      const preset = PROVIDER_PRESETS[presetKey] || PROVIDER_PRESETS.gemini;
+      preferences.preset = presetKey;
+      preferences.apiEndpoint = preset.endpoint;
+      preferences.customHeaders = preset.headers;
+      preferences.authHeaderName = preset.authHeader;
+      preferences.authHeaderPrefix = preset.authPrefix;
+      preferences.customModel = '';
+
+      const providerSelect = document.getElementById('provider-select');
+      if (providerSelect) providerSelect.value = presetKey;
+
+      const keyInput = document.getElementById('api-key-input');
+      if (keyInput) {
+        keyInput.placeholder = preset.placeholder;
+        if (!preserveKey) {
+          keyInput.value = getApiKey(presetKey);
+        }
+      }
+
+      const modalKeyInput = document.getElementById('modal-api-key-input');
+      if (modalKeyInput) {
+        modalKeyInput.placeholder = preset.placeholder;
+        modalKeyInput.value = getApiKey(presetKey);
+      }
+
+      populateModelSelect(presetKey, preset.models[0]?.value || '');
+      updateApiSecurityNotice();
+
+      const hasKey = Boolean(getApiKey(presetKey));
+      setApiStatus(hasKey ? 'idle' : 'idle', hasKey ? 'Key Entered (Untested)' : 'No Key Set');
+      savePreferences();
+    }
+
+    // Sanitize stale preferences from older versions stored in localStorage
+    function sanitizeLoadedPreferences() {
+      if (!PROVIDER_PRESETS[preferences.preset]) {
+        preferences.preset = 'gemini';
+      }
+      const preset = PROVIDER_PRESETS[preferences.preset];
+
+      // Auto-migrate retired models
+      if (RETIRED_MODEL_MAP[preferences.modelChoice]) {
+        preferences.modelChoice = RETIRED_MODEL_MAP[preferences.modelChoice];
+      }
+
+      // Fix legacy Anthropic header typo & remove forbidden HTTP-Referer
+      if (preferences.customHeaders) {
+        preferences.customHeaders = preferences.customHeaders
+          .replace(/anthropic-danger-out-of-band-requests-allowed/g, 'anthropic-dangerous-direct-browser-access');
+        try {
+          const parsed = JSON.parse(preferences.customHeaders);
+          delete parsed['HTTP-Referer'];
+          // Prevent stray cross-provider headers on Gemini (triggers 403 CORS preflight)
+          if (preferences.preset === 'gemini') {
+            delete parsed['X-Title'];
+            delete parsed['anthropic-version'];
+            delete parsed['anthropic-dangerous-direct-browser-access'];
+          }
+          preferences.customHeaders = JSON.stringify(parsed, null, 2);
+        } catch (e) {
+          preferences.customHeaders = preset.headers;
+        }
+      } else {
+        preferences.customHeaders = preset.headers;
+      }
+
+      // Ensure Anthropic preset always has its required browser CORS header
+      if (preferences.preset === 'anthropic') {
+        try {
+          const parsed = JSON.parse(preferences.customHeaders || '{}');
+          if (!parsed['anthropic-version']) parsed['anthropic-version'] = '2023-06-01';
+          parsed['anthropic-dangerous-direct-browser-access'] = 'true';
+          preferences.customHeaders = JSON.stringify(parsed, null, 2);
+        } catch (e) {
+          preferences.customHeaders = preset.headers;
+        }
+      }
+
+      // If endpoint doesn't look like a valid URL, restore preset default
+      if (!preferences.apiEndpoint || !/^https?:\/\//i.test(preferences.apiEndpoint)) {
+        preferences.apiEndpoint = preset.endpoint;
+      }
+    }
+
+    // Never log API Key or display plain text in console
     function loadApiSettings() {
-      const storedKey = getApiKey();
+      migrateLegacyApiKey();
+      sanitizeLoadedPreferences();
+
+      const storedKey = getApiKey(preferences.preset);
+      const providerSelect = document.getElementById('provider-select');
+      if (providerSelect) providerSelect.value = preferences.preset;
+
       const input = document.getElementById('api-key-input');
+      const preset = PROVIDER_PRESETS[preferences.preset] || PROVIDER_PRESETS.gemini;
       if (input) {
         input.value = storedKey;
+        input.placeholder = preset.placeholder;
       }
-      
+
       const modalInput = document.getElementById('modal-api-key-input');
       if (modalInput) {
         modalInput.value = storedKey;
+        modalInput.placeholder = preset.placeholder;
       }
-      
-      const savedPrefs = localStorage.getItem('prepmaster_preferences');
-      if (savedPrefs) {
-        const parsed = JSON.parse(savedPrefs);
-        preferences.clearOnClose = parsed.clearOnClose !== undefined ? parsed.clearOnClose : true;
-        preferences.modelChoice = parsed.modelChoice || 'gpt-4o-mini';
-        preferences.passPercent = parsed.passPercent || 50;
-        preferences.apiEndpoint = parsed.apiEndpoint || 'https://api.openai.com/v1/chat/completions';
-        preferences.systemPrompt = parsed.systemPrompt || 'You are a helpful and concise AI exam tutor. Explain why the correct option is right and others are wrong in ONE short paragraph (max 3 sentences). Do not show step-by-step calculations unless absolutely necessary.';
-        preferences.preset = parsed.preset || 'openai';
-        preferences.customModel = parsed.customModel || '';
-        preferences.customHeaders = parsed.customHeaders || '';
-        preferences.authHeaderName = parsed.authHeaderName || 'Authorization';
-        preferences.authHeaderPrefix = parsed.authHeaderPrefix !== undefined ? parsed.authHeaderPrefix : 'Bearer ';
-      }
-      
+
       document.getElementById('clear-on-close-cb').checked = preferences.clearOnClose;
-      document.getElementById('config-pass-percent').value = preferences.passPercent;
-      
-      document.getElementById('settings-preset').value = preferences.preset;
-      document.getElementById('settings-endpoint').value = preferences.apiEndpoint;
-      document.getElementById('settings-prompt').value = preferences.systemPrompt;
-      document.getElementById('settings-custom-model').value = preferences.customModel;
-      document.getElementById('settings-headers').value = preferences.customHeaders;
-      document.getElementById('settings-auth-header').value = preferences.authHeaderName;
-      document.getElementById('settings-auth-prefix').value = preferences.authHeaderPrefix;
-      
-      refreshUIForPreset(preferences.preset, true);
-      document.getElementById('model-select').value = preferences.modelChoice;
-      
-      if (preferences.clearOnClose) {
-        window.addEventListener('beforeunload', () => {
-          // sessionStorage is tab-isolated, so it clears when the tab is closed.
-        });
-      }
+      populateModelSelect(preferences.preset, preferences.modelChoice);
+      updateApiSecurityNotice();
+      setApiStatus('idle', storedKey ? 'Key Ready' : 'No Key Set');
+      savePreferences();
     }
 
     function openSettingsModal() {
@@ -2304,62 +3000,531 @@
       document.getElementById('settings-headers').value = preferences.customHeaders || '';
       document.getElementById('settings-auth-header').value = preferences.authHeaderName || 'Authorization';
       document.getElementById('settings-auth-prefix').value = preferences.authHeaderPrefix !== undefined ? preferences.authHeaderPrefix : 'Bearer ';
-      
+
+      const preset = PROVIDER_PRESETS[preferences.preset] || PROVIDER_PRESETS.gemini;
       const modalKeyInput = document.getElementById('modal-api-key-input');
       if (modalKeyInput) {
-        modalKeyInput.value = getApiKey() || '';
+        modalKeyInput.value = getApiKey(preferences.preset);
+        modalKeyInput.placeholder = preset.placeholder;
       }
-      
+
+      const testRes = document.getElementById('modal-test-result');
+      if (testRes) {
+        testRes.style.display = 'none';
+        testRes.textContent = '';
+      }
+
       dialog.showModal();
+    }
+
+    // Build clean, provider-safe request headers
+    function buildProviderHeaders({ apiKey, authHeaderName, authPrefix, customHeadersStr, presetKey, endpoint }) {
+      const headers = { 'Content-Type': 'application/json' };
+      const isGeminiNative = endpoint.includes('generativelanguage.googleapis.com') && endpoint.includes(':generateContent');
+      const isGeminiEndpoint = endpoint.includes('generativelanguage.googleapis.com');
+
+      if (customHeadersStr) {
+        try {
+          const parsedHeaders = JSON.parse(customHeadersStr);
+          Object.entries(parsedHeaders).forEach(([k, v]) => {
+            const lower = k.toLowerCase();
+            // Browser fetch forbids setting HTTP-Referer / Referer manually
+            if (lower === 'http-referer' || lower === 'referer') return;
+            // Google's CORS preflight rejects non-standard cross-provider headers with 403
+            if (isGeminiEndpoint && (lower === 'x-title' || lower.startsWith('anthropic-'))) return;
+            headers[k] = v;
+          });
+        } catch (e) {
+          console.warn('Invalid custom headers JSON ignored.');
+        }
+      }
+
+      // Ensure Anthropic direct browser access header is present
+      if (presetKey === 'anthropic' || endpoint.includes('api.anthropic.com')) {
+        headers['anthropic-version'] = headers['anthropic-version'] || '2023-06-01';
+        headers['anthropic-dangerous-direct-browser-access'] = 'true';
+      }
+
+      // Always apply auth header last so customHeaders can't accidentally clobber it
+      if (apiKey) {
+        if (isGeminiNative) {
+          headers['x-goog-api-key'] = apiKey;
+        } else {
+          const headerName = authHeaderName || 'Authorization';
+          const prefix = authPrefix !== undefined ? authPrefix : 'Bearer ';
+          headers[headerName] = `${prefix}${apiKey}`;
+        }
+      }
+
+      return headers;
+    }
+
+    // Parse provider error responses across OpenAI, Gemini (array/object), Anthropic, and plain text
+    function extractApiErrorMessage(rawText, status) {
+      let msg = '';
+      try {
+        const parsed = JSON.parse(rawText);
+        if (Array.isArray(parsed) && parsed[0]?.error?.message) {
+          msg = parsed[0].error.message;
+        } else if (typeof parsed?.error === 'string') {
+          msg = parsed.error;
+        } else if (parsed?.error?.message) {
+          msg = parsed.error.message;
+        } else if (parsed?.message) {
+          msg = parsed.message;
+        }
+      } catch (e) {
+        msg = (rawText || '').slice(0, 220).trim();
+      }
+
+      if (status === 401) {
+        return `Invalid API key (401). ${msg || 'Check that your key matches the selected provider.'}`;
+      }
+      if (status === 403) {
+        return `Access denied (403). ${msg || 'Check API key permissions, billing, or model access.'}`;
+      }
+      if (status === 404) {
+        return `Model or endpoint not found (404). ${msg || 'Try clicking "⚡ Test & Sync" to load active models.'}`;
+      }
+      if (status === 429) {
+        return `Rate limit or quota exceeded (429). ${msg || 'Wait a moment or try a lighter model.'}`;
+      }
+      return msg ? `HTTP ${status}: ${msg}` : `HTTP ${status}`;
+    }
+
+    // Verify API key & fetch live available models from provider
+    async function testApiConnection({ fromModal = false } = {}) {
+      const presetKey = fromModal
+        ? document.getElementById('settings-preset').value
+        : preferences.preset;
+      const preset = PROVIDER_PRESETS[presetKey] || PROVIDER_PRESETS.gemini;
+      const apiKey = fromModal
+        ? document.getElementById('modal-api-key-input').value.trim()
+        : getApiKey(presetKey);
+      const endpoint = fromModal
+        ? document.getElementById('settings-endpoint').value.trim() || preset.endpoint
+        : preferences.apiEndpoint || preset.endpoint;
+
+      const testBtn = document.getElementById(fromModal ? 'modal-test-key-btn' : 'test-key-btn');
+      const modalResult = document.getElementById('modal-test-result');
+
+      if (!apiKey) {
+        const msg = 'Enter an API key first to test.';
+        setApiStatus('err', 'No Key Set');
+        if (fromModal && modalResult) {
+          modalResult.style.display = 'block';
+          modalResult.style.color = 'var(--error)';
+          modalResult.textContent = '⚠️ ' + msg;
+        } else {
+          showToast(msg, 'error');
+        }
+        return;
+      }
+
+      const originalLabel = testBtn ? testBtn.textContent : '';
+      if (testBtn) {
+        testBtn.disabled = true;
+        testBtn.textContent = '⏳ Testing...';
+      }
+      setApiStatus('testing', 'Testing key...');
+      if (fromModal && modalResult) {
+        modalResult.style.display = 'block';
+        modalResult.style.color = 'var(--text-secondary)';
+        modalResult.textContent = '⏳ Connecting to ' + preset.name + '...';
+      }
+
+      try {
+        let fetchedModels = [];
+
+        if (preset.modelsEndpoint && (!fromModal || endpoint === preset.endpoint)) {
+          const reqHeaders = {};
+          if (presetKey === 'gemini') {
+            reqHeaders['x-goog-api-key'] = apiKey;
+          } else if (presetKey === 'anthropic') {
+            reqHeaders['x-api-key'] = apiKey;
+            reqHeaders['anthropic-version'] = '2023-06-01';
+            reqHeaders['anthropic-dangerous-direct-browser-access'] = 'true';
+          } else {
+            const hName = preset.modelsAuthHeader || preset.authHeader || 'Authorization';
+            const hPref = preset.modelsAuthPrefix !== undefined ? preset.modelsAuthPrefix : (preset.authPrefix !== undefined ? preset.authPrefix : 'Bearer ');
+            reqHeaders[hName] = `${hPref}${apiKey}`;
+          }
+
+          const res = await fetch(preset.modelsEndpoint, { method: 'GET', headers: reqHeaders });
+          const raw = await res.text();
+          if (!res.ok) {
+            throw new Error(extractApiErrorMessage(raw, res.status));
+          }
+
+          const data = JSON.parse(raw);
+          if (presetKey === 'gemini' && Array.isArray(data.models)) {
+            fetchedModels = data.models
+              .filter(m => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent'))
+              .map(m => (m.name || '').replace(/^models\//, ''))
+              .filter(id => id && !/embedding|imagen|veo|aqa|tts|transcribe|live|image|robotics/i.test(id))
+              .sort()
+              .reverse();
+          } else if (Array.isArray(data.data)) {
+            fetchedModels = data.data
+              .map(m => m.id)
+              .filter(id => id && !/embedding|whisper|tts|dall-e|moderation|audio|realtime|sora|transcribe|guard/i.test(id))
+              .slice(0, 80);
+          }
+
+          if (fetchedModels.length > 0) {
+            liveProviderModels[presetKey] = fetchedModels;
+            if (!fromModal || presetKey === preferences.preset) {
+              populateModelSelect(presetKey, preferences.modelChoice);
+            }
+          }
+        } else {
+          // Custom endpoint fallback: send a tiny verification completion
+          const testAuthHeader = fromModal ? document.getElementById('settings-auth-header').value.trim() : preferences.authHeaderName;
+          const testAuthPrefix = fromModal ? document.getElementById('settings-auth-prefix').value : preferences.authHeaderPrefix;
+          const testCustomHeaders = fromModal ? document.getElementById('settings-headers').value.trim() : preferences.customHeaders;
+          const modelToTest = (fromModal && document.getElementById('settings-custom-model').value.trim()) || preferences.modelChoice;
+          const headers = buildProviderHeaders({
+            apiKey,
+            authHeaderName: testAuthHeader,
+            authPrefix: testAuthPrefix,
+            customHeadersStr: testCustomHeaders,
+            presetKey,
+            endpoint
+          });
+          const res = await fetch(endpoint, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({
+              model: modelToTest,
+              messages: [{ role: 'user', content: 'Reply OK' }],
+              max_tokens: 5
+            })
+          });
+          const raw = await res.text();
+          if (!res.ok) {
+            throw new Error(extractApiErrorMessage(raw, res.status));
+          }
+        }
+
+        const successSummary = fetchedModels.length > 0
+          ? `Connected (${fetchedModels.length} models synced)`
+          : 'Key Verified ✓';
+        setApiStatus('ok', '✓ ' + (fetchedModels.length > 0 ? `${fetchedModels.length} models synced` : 'Connected'));
+        if (fromModal && modalResult) {
+          modalResult.style.display = 'block';
+          modalResult.style.color = 'var(--success)';
+          modalResult.textContent = `✓ ${preset.name}: ${successSummary}`;
+        } else {
+          showToast(`${preset.name}: ${successSummary}`, 'success');
+        }
+      } catch (err) {
+        let friendly = err.message || 'Connection failed.';
+        if (err instanceof TypeError && /fetch/i.test(err.message)) {
+          friendly = `Network/CORS blocked by ${preset.name}. Check your internet, endpoint URL, or use a CORS-enabled provider (Gemini, OpenAI, Groq, OpenRouter, DeepSeek, Claude).`;
+        }
+        setApiStatus('err', '✗ Key / Connection Failed');
+        if (fromModal && modalResult) {
+          modalResult.style.display = 'block';
+          modalResult.style.color = 'var(--error)';
+          modalResult.textContent = '⚠️ ' + friendly;
+        } else {
+          showToast(friendly, 'error');
+        }
+      } finally {
+        if (testBtn) {
+          testBtn.disabled = false;
+          testBtn.textContent = originalLabel;
+        }
+      }
+    }
+
+    // Light-dismiss fallback for browsers without native <dialog closedby="any"> (e.g. Safari)
+    function initDialogLightDismissFallback() {
+      if ('closedBy' in HTMLDialogElement.prototype) return;
+      const outside = (e, dialog) => {
+        const r = dialog.getBoundingClientRect();
+        return e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom;
+      };
+      for (const dialog of document.querySelectorAll('dialog[closedby="any"]')) {
+        let pressedOutside = false;
+        dialog.addEventListener('pointerdown', (e) => {
+          pressedOutside = outside(e, dialog);
+        });
+        dialog.addEventListener('pointerup', (e) => {
+          if (pressedOutside && outside(e, dialog)) dialog.close();
+          pressedOutside = false;
+        });
+      }
+    }
+
+    // Sync aria-invalid & aria-describedby with :user-invalid + polite live announcer
+    function initAccessibleFormValidation() {
+      const linkError = (el, shown) => {
+        const errorId = el.dataset?.error;
+        if (!errorId) return;
+        const ids = (el.getAttribute('aria-describedby') || '').split(/\s+/).filter(id => id && id !== errorId);
+        if (shown) ids.push(errorId);
+        if (ids.length) el.setAttribute('aria-describedby', ids.join(' '));
+        else el.removeAttribute('aria-describedby');
+      };
+
+      const announcer = document.createElement('div');
+      announcer.setAttribute('aria-live', 'polite');
+      announcer.classList.add('visually-hidden');
+      document.body.append(announcer);
+      let announceTimer;
+
+      const supportsUserInvalid = CSS.supports('selector(:user-invalid)');
+      const dirtyState = new WeakMap();
+
+      const updateFieldAria = (el, announce = false) => {
+        if (!el.matches?.('input[data-error], select[data-error], textarea[data-error]')) return;
+        const invalid = supportsUserInvalid
+          ? el.matches(':user-invalid')
+          : Boolean(dirtyState.get(el)?.show && !el.validity.valid);
+
+        if (!supportsUserInvalid) {
+          el.classList.toggle('user-invalid-fallback', invalid);
+        }
+        el.setAttribute('aria-invalid', invalid ? 'true' : 'false');
+        linkError(el, invalid);
+
+        if (invalid && announce) {
+          const errorEl = document.getElementById(el.dataset.error);
+          if (errorEl) {
+            clearTimeout(announceTimer);
+            announcer.textContent = '';
+            announceTimer = setTimeout(() => {
+              announcer.textContent = errorEl.textContent.trim();
+            }, 350);
+          }
+        }
+      };
+
+      document.querySelectorAll('input[data-error], select[data-error], textarea[data-error]').forEach(el => {
+        el.setAttribute('aria-invalid', 'false');
+      });
+
+      document.addEventListener('blur', (e) => {
+        if (!supportsUserInvalid && e.target?.matches?.('[data-error]')) {
+          const st = dirtyState.get(e.target) || { touched: false, show: false };
+          if (st.touched) st.show = true;
+          dirtyState.set(e.target, st);
+        }
+        updateFieldAria(e.target, true);
+      }, true);
+
+      document.addEventListener('input', (e) => {
+        if (!supportsUserInvalid && e.target?.matches?.('[data-error]')) {
+          const st = dirtyState.get(e.target) || { touched: false, show: false };
+          st.touched = true;
+          dirtyState.set(e.target, st);
+        }
+        updateFieldAria(e.target, false);
+      });
+
+      document.addEventListener('invalid', (e) => {
+        if (!supportsUserInvalid && e.target?.matches?.('[data-error]')) {
+          dirtyState.set(e.target, { touched: true, show: true });
+        }
+        updateFieldAria(e.target, false);
+      }, true);
+    }
+
+    function renderTopicChipsForSection(sectionKey) {
+      const container = document.getElementById('dynamic-topic-chips');
+      if (!container) return;
+      const presets = SECTION_TOPIC_PRESETS[sectionKey] || SECTION_TOPIC_PRESETS.quant;
+      container.innerHTML = '';
+
+      presets.forEach(item => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'topic-chip';
+        btn.textContent = item.label;
+        btn.addEventListener('click', () => {
+          const topicInput = document.getElementById('ai-exam-name');
+          const subjectsInput = document.getElementById('ai-subjects');
+          const styleSelect = document.getElementById('ai-style');
+          topicInput.value = item.topic;
+          subjectsInput.value = item.rules || '';
+          if (item.style && styleSelect) {
+            styleSelect.value = item.style;
+          }
+          topicInput.dispatchEvent(new Event('input', { bubbles: true }));
+          topicInput.focus();
+        });
+        container.appendChild(btn);
+      });
+    }
+
+    function initExamAndSectionPresets() {
+      const examPills = document.querySelectorAll('#exam-preset-pills .preset-pill');
+      examPills.forEach(pill => {
+        pill.addEventListener('click', () => {
+          examPills.forEach(p => p.classList.remove('active'));
+          pill.classList.add('active');
+          selectedTargetExam = pill.dataset.exam || '';
+          const markingSelect = document.getElementById('exam-marking-scheme');
+          if (markingSelect && pill.dataset.marking) {
+            markingSelect.value = pill.dataset.marking;
+          }
+        });
+      });
+
+      const sectionPills = document.querySelectorAll('#section-preset-pills .preset-pill');
+      sectionPills.forEach(pill => {
+        pill.addEventListener('click', () => {
+          sectionPills.forEach(p => p.classList.remove('active'));
+          pill.classList.add('active');
+          selectedSection = pill.dataset.section || 'quant';
+          renderTopicChipsForSection(selectedSection);
+          const styleSelect = document.getElementById('ai-style');
+          if (styleSelect) {
+            if (selectedSection === 'di') styleSelect.value = 'case-study';
+            else if (selectedSection === 'quant') styleSelect.value = 'speed-drill';
+            else styleSelect.value = 'standard';
+          }
+        });
+      });
+
+      renderTopicChipsForSection(selectedSection);
+    }
+
+    function initExamKeyboardShortcuts() {
+      document.addEventListener('keydown', (e) => {
+        if (getActiveViewId() !== 'exam-view') return;
+        // Ignore if a modal dialog is open or user is typing in an input
+        if (document.querySelector('dialog[open]')) return;
+        const tag = (e.target?.tagName || '').toLowerCase();
+        if (tag === 'input' || tag === 'textarea' || tag === 'select' || e.metaKey || e.ctrlKey || e.altKey) return;
+
+        const layout = document.getElementById('exam-layout-val')?.value || 'slider';
+        if (layout !== 'slider') return;
+
+        const key = e.key.toLowerCase();
+        if (key === 'arrowleft') {
+          e.preventDefault();
+          navigateSlider(-1);
+        } else if (key === 'arrowright') {
+          e.preventDefault();
+          navigateSlider(1);
+        } else if (key === 'f') {
+          e.preventDefault();
+          toggleQuestionFlagged();
+        } else {
+          const letterMap = { '1': 'A', '2': 'B', '3': 'C', '4': 'D', 'a': 'A', 'b': 'B', 'c': 'C', 'd': 'D' };
+          const letter = letterMap[key];
+          if (letter) {
+            const q = questions[currentQuestionIdx];
+            const hiddenOpts = questionHiddenOptions[currentQuestionIdx] || [];
+            if (q && q.options && q.options[letter] && !hiddenOpts.includes(letter)) {
+              e.preventDefault();
+              userSelections[q.questionNumber] = letter;
+              renderSliderQuestion();
+              buildExamNavGrid();
+              updateExamProgress();
+            }
+          }
+        }
+      });
     }
 
     function initButtonListeners() {
       // API Settings events
+      const providerSelect = document.getElementById('provider-select');
       const keyInput = document.getElementById('api-key-input');
       const modalKeyInput = document.getElementById('modal-api-key-input');
+      const toggleVisBtn = document.getElementById('toggle-key-vis-btn');
+
+      providerSelect.addEventListener('change', (e) => {
+        applyPresetToActivePreferences(e.target.value, false);
+        showToast(`Switched provider to ${PROVIDER_PRESETS[e.target.value]?.name || e.target.value}.`, 'info');
+      });
 
       keyInput.addEventListener('input', (e) => {
         const val = e.target.value.trim();
-        setApiKey(val);
-        if (modalKeyInput) {
+        const detected = detectProviderFromKey(val);
+        if (detected && detected !== preferences.preset && preferences.preset !== 'custom') {
+          applyPresetToActivePreferences(detected, true);
+          showToast(`Auto-detected ${PROVIDER_PRESETS[detected].name} key!`, 'info');
+        }
+        setApiKey(val, preferences.preset);
+        if (modalKeyInput && document.getElementById('settings-preset').value === preferences.preset) {
           modalKeyInput.value = val;
         }
+        setApiStatus('idle', val ? 'Key Entered (Click Test & Sync)' : 'No Key Set');
       });
+
+      if (toggleVisBtn) {
+        toggleVisBtn.addEventListener('click', () => {
+          const isPassword = keyInput.type === 'password';
+          keyInput.type = isPassword ? 'text' : 'password';
+          toggleVisBtn.textContent = isPassword ? '🙈' : '👁️';
+          toggleVisBtn.title = isPassword ? 'Hide API Key' : 'Show API Key';
+        });
+      }
 
       if (modalKeyInput) {
         modalKeyInput.addEventListener('input', (e) => {
           const val = e.target.value.trim();
-          setApiKey(val);
-          keyInput.value = val;
+          const modalPresetEl = document.getElementById('settings-preset');
+          const detected = detectProviderFromKey(val);
+          if (detected && detected !== modalPresetEl.value && modalPresetEl.value !== 'custom') {
+            modalPresetEl.value = detected;
+            fillModalFieldsForPreset(detected);
+            showToast(`Auto-detected ${PROVIDER_PRESETS[detected].name} key!`, 'info');
+          }
         });
       }
 
+      document.getElementById('test-key-btn').addEventListener('click', () => testApiConnection({ fromModal: false }));
+      document.getElementById('modal-test-key-btn').addEventListener('click', () => testApiConnection({ fromModal: true }));
+
       document.getElementById('clear-key-btn').addEventListener('click', () => {
-        setApiKey('');
+        setApiKey('', preferences.preset);
         if (keyInput) keyInput.value = '';
-        if (modalKeyInput) {
-          modalKeyInput.value = '';
-        }
-        showToast('API Key cleared successfully.', 'success');
+        if (modalKeyInput) modalKeyInput.value = '';
+        setApiStatus('idle', 'No Key Set');
+        showToast(`${PROVIDER_PRESETS[preferences.preset]?.name || 'API'} key cleared.`, 'success');
       });
 
       document.getElementById('clear-on-close-cb').addEventListener('change', (e) => {
-        preferences.clearOnClose = e.target.checked;
+        const checked = e.target.checked;
+        preferences.clearOnClose = checked;
+        migrateKeyStorageMode(checked);
         savePreferences();
+        showToast(
+          checked
+            ? 'API keys will clear when this tab closes (sessionStorage).'
+            : 'API keys will be remembered in this browser (localStorage).',
+          'info'
+        );
       });
 
       document.getElementById('model-select').addEventListener('change', (e) => {
         preferences.modelChoice = e.target.value;
+        if (e.target.value !== preferences.customModel) {
+          preferences.customModel = '';
+        }
         savePreferences();
       });
 
-      // Tab Proceed button Upload Mode
-      document.getElementById('parse-proceed-btn').addEventListener('click', handleUploadParseProceed);
-      
-      // AI Gen tab trigger
-      document.getElementById('ai-generate-btn').addEventListener('click', handleAIGenerateExam);
+      // AI Gen form submit
+      document.getElementById('ai-generator-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        handleAIGenerateExam();
+      });
       document.getElementById('ai-unlimited-cb').addEventListener('change', updateUnlimitedModeUI);
       document.getElementById('continuous-stop-btn').addEventListener('click', stopContinuousGeneration);
+
+      // Import JSON Set
+      const importBtn = document.getElementById('import-set-btn');
+      const importInput = document.getElementById('import-set-input');
+      if (importBtn && importInput) {
+        importBtn.addEventListener('click', () => importInput.click());
+        importInput.addEventListener('change', handleImportSetJSON);
+      }
 
       // Question list editing actions
       document.getElementById('pv-add-q-btn').addEventListener('click', handlePreviewAddQuestion);
@@ -2379,11 +3544,8 @@
       const headerTimerBox = document.getElementById('header-timer-box');
       if (headerTimerBox) {
         headerTimerBox.addEventListener('click', () => {
-          if (isTimerPaused) {
-            resumeExamTimer();
-          } else {
-            pauseExamTimer();
-          }
+          if (isTimerPaused) resumeExamTimer();
+          else pauseExamTimer();
         });
         headerTimerBox.style.cursor = 'pointer';
         headerTimerBox.title = 'Click to pause/resume';
@@ -2394,6 +3556,13 @@
       document.getElementById('exam-next-btn').addEventListener('click', () => navigateSlider(1));
       document.getElementById('exam-flag-btn').addEventListener('click', toggleQuestionFlagged);
       document.getElementById('exam-submit-trigger').addEventListener('click', openSubmitConfirmModal);
+      const clearRoughBtn = document.getElementById('rough-sheet-clear-btn');
+      if (clearRoughBtn) {
+        clearRoughBtn.addEventListener('click', () => {
+          const rough = document.getElementById('exam-rough-sheet');
+          if (rough) rough.value = '';
+        });
+      }
 
       // Submit modal cancel/proceed
       document.getElementById('confirm-submit-close-btn').addEventListener('click', () => document.getElementById('confirm-submit-dialog').close());
@@ -2417,42 +3586,72 @@
       // Create New Set Header Button
       document.getElementById('header-new-set-btn').addEventListener('click', handleNewSetClick);
 
-      // Preset change listener
+      // Modal Preset change listener (only updates modal fields — does NOT leak into active preferences until Save!)
       document.getElementById('settings-preset').addEventListener('change', (e) => {
-        refreshUIForPreset(e.target.value, false);
+        const presetKey = e.target.value;
+        fillModalFieldsForPreset(presetKey);
+        const modalKey = document.getElementById('modal-api-key-input');
+        if (modalKey) {
+          modalKey.value = getApiKey(presetKey);
+          modalKey.placeholder = (PROVIDER_PRESETS[presetKey] || PROVIDER_PRESETS.custom).placeholder;
+        }
       });
 
-      // Custom model watcher
-      document.getElementById('settings-custom-model').addEventListener('input', () => {
-        refreshUIForPreset(document.getElementById('settings-preset').value, true);
+      document.getElementById('modal-reset-preset-btn').addEventListener('click', () => {
+        const presetKey = document.getElementById('settings-preset').value;
+        fillModalFieldsForPreset(presetKey);
+        document.getElementById('settings-custom-model').value = '';
+        showToast('Reset endpoint and headers to preset defaults.', 'info');
       });
 
-      // Config modal trigger
+      document.getElementById('config-cancel-btn').addEventListener('click', () => {
+        document.getElementById('exam-config-dialog').close();
+      });
+
+      // Config modal Save
       document.getElementById('config-save-btn').addEventListener('click', () => {
-        preferences.passPercent = parseInt(document.getElementById('config-pass-percent').value, 10) || 50;
-        preferences.preset = document.getElementById('settings-preset').value;
-        preferences.apiEndpoint = document.getElementById('settings-endpoint').value.trim();
-        preferences.systemPrompt = document.getElementById('settings-prompt').value.trim();
-        preferences.customModel = document.getElementById('settings-custom-model').value.trim();
-        preferences.customHeaders = document.getElementById('settings-headers').value.trim();
-        preferences.authHeaderName = document.getElementById('settings-auth-header').value.trim() || 'Authorization';
-        preferences.authHeaderPrefix = document.getElementById('settings-auth-prefix').value;
-        
-        const modalKeyInput = document.getElementById('modal-api-key-input');
-        if (modalKeyInput) {
-          const val = modalKeyInput.value.trim();
-          setApiKey(val);
-          const keyInput = document.getElementById('api-key-input');
-          if (keyInput) {
-            keyInput.value = val;
+        const endpointInput = document.getElementById('settings-endpoint');
+        if (!endpointInput.checkValidity()) {
+          endpointInput.reportValidity();
+          return;
+        }
+
+        const selectedPreset = document.getElementById('settings-preset').value;
+        const headersText = document.getElementById('settings-headers').value.trim();
+        if (headersText) {
+          try {
+            JSON.parse(headersText);
+          } catch (e) {
+            showToast('Custom Headers must be valid JSON.', 'error');
+            return;
           }
         }
-        
+
+        preferences.passPercent = parseInt(document.getElementById('config-pass-percent').value, 10) || 50;
+        preferences.preset = selectedPreset;
+        preferences.apiEndpoint = endpointInput.value.trim();
+        preferences.systemPrompt = document.getElementById('settings-prompt').value.trim();
+        preferences.customModel = document.getElementById('settings-custom-model').value.trim();
+        preferences.customHeaders = headersText;
+        preferences.authHeaderName = document.getElementById('settings-auth-header').value.trim() || 'Authorization';
+        preferences.authHeaderPrefix = document.getElementById('settings-auth-prefix').value;
+
+        const val = document.getElementById('modal-api-key-input').value.trim();
+        setApiKey(val, selectedPreset);
+
+        const preset = PROVIDER_PRESETS[selectedPreset] || PROVIDER_PRESETS.gemini;
+        document.getElementById('provider-select').value = selectedPreset;
+        keyInput.value = val;
+        keyInput.placeholder = preset.placeholder;
+
+        sanitizeLoadedPreferences();
+        populateModelSelect(selectedPreset, preferences.customModel || preferences.modelChoice);
+        updateApiSecurityNotice();
+        setApiStatus('idle', val ? 'Key Saved' : 'No Key Set');
         savePreferences();
-        refreshUIForPreset(preferences.preset, true);
-        
+
         document.getElementById('exam-config-dialog').close();
-        showToast("Settings saved successfully.", "success");
+        showToast('Settings saved successfully.', 'success');
       });
 
       // KBC Lifelines listeners
@@ -2468,12 +3667,16 @@
       document.getElementById('exam-timer-off').addEventListener('change', (e) => {
         const timerInput = document.getElementById('exam-timer-val');
         timerInput.disabled = e.target.checked;
-        if (e.target.checked) {
-          timerInput.style.opacity = '0.5';
-        } else {
-          timerInput.style.opacity = '1';
-        }
+        timerInput.style.opacity = e.target.checked ? '0.5' : '1';
       });
+    }
+
+    function fillModalFieldsForPreset(presetKey) {
+      const preset = PROVIDER_PRESETS[presetKey] || PROVIDER_PRESETS.gemini;
+      document.getElementById('settings-endpoint').value = preset.endpoint;
+      document.getElementById('settings-headers').value = preset.headers;
+      document.getElementById('settings-auth-header').value = preset.authHeader;
+      document.getElementById('settings-auth-prefix').value = preset.authPrefix;
     }
 
     function savePreferences() {
@@ -2483,11 +3686,13 @@
     function loadPreferences() {
       const saved = localStorage.getItem('prepmaster_preferences');
       if (saved) {
-        Object.assign(preferences, JSON.parse(saved));
+        try {
+          Object.assign(preferences, JSON.parse(saved));
+        } catch (e) {}
       }
     }
 
-    // --- UI/UX GLOW & TAB TOGGLES ---
+    // --- UI/UX THEME & FORM CONTROLS ---
 
     function initThemeToggle() {
       const toggle = document.getElementById('theme-toggle-btn');
@@ -2523,33 +3728,19 @@
       });
     }
 
-    function initTabNavigation() {
-      const tabUpload = document.getElementById('tab-upload');
-      const tabGen = document.getElementById('tab-generate');
-      const panelUpload = document.getElementById('panel-upload');
-      const panelGen = document.getElementById('panel-generate');
-
-      tabUpload.addEventListener('click', () => {
-        tabUpload.classList.add('active');
-        tabGen.classList.remove('active');
-        panelUpload.classList.remove('hidden');
-        panelGen.classList.add('hidden');
-      });
-
-      tabGen.addEventListener('click', () => {
-        tabGen.classList.add('active');
-        tabUpload.classList.remove('active');
-        panelGen.classList.remove('hidden');
-        panelUpload.classList.add('hidden');
-      });
-    }
-
     function initFormSliders() {
       const countInput = document.getElementById('ai-count');
       const countVal = document.getElementById('ai-count-val');
-      countInput.addEventListener('input', (e) => {
-        countVal.textContent = e.target.value;
-      });
+      const batchNote = document.getElementById('ai-count-batch-note');
+      const updateSliderUI = () => {
+        const val = parseInt(countInput.value, 10) || 10;
+        countVal.textContent = val;
+        if (batchNote) {
+          batchNote.style.display = val > 25 ? 'block' : 'none';
+        }
+      };
+      countInput.addEventListener('input', updateSliderUI);
+      updateSliderUI();
       updateUnlimitedModeUI();
     }
 
@@ -2583,67 +3774,170 @@
       return 'hard';
     }
 
+    function extractJsonPayload(rawText) {
+      let text = (rawText || '').trim();
+      // Remove markdown code fences if present
+      const fenceMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
+      if (fenceMatch) {
+        text = fenceMatch[1].trim();
+      }
+      // Try direct parse first
+      try {
+        return JSON.parse(text);
+      } catch (e) {}
+
+      // Extract outermost JSON array or object
+      const firstBracket = text.indexOf('[');
+      const lastBracket = text.lastIndexOf(']');
+      const firstBrace = text.indexOf('{');
+      const lastBrace = text.lastIndexOf('}');
+
+      const candidates = [];
+      if (firstBracket !== -1 && lastBracket > firstBracket) {
+        candidates.push(text.slice(firstBracket, lastBracket + 1));
+      }
+      if (firstBrace !== -1 && lastBrace > firstBrace) {
+        candidates.push(text.slice(firstBrace, lastBrace + 1));
+      }
+
+      for (const candidate of candidates) {
+        try {
+          return JSON.parse(candidate);
+        } catch (e) {}
+      }
+
+      throw new Error('Could not parse JSON from AI response. Try regenerating or choosing a stronger model.');
+    }
+
     function mapParsedQuestions(parsed, startNumber = 1) {
+      const letters = ['A', 'B', 'C', 'D', 'E'];
       return parsed.map((q, idx) => {
         const optionsObj = {};
         if (Array.isArray(q.options)) {
-          q.options.forEach(opt => {
-            const letterMatch = opt.match(/^\s*([A-D])[\)\.\s-]\s*(.+)$/i);
+          q.options.forEach((opt, optIdx) => {
+            const str = String(opt || '').trim();
+            const letterMatch = str.match(/^\s*(?:\(|\[)?([A-E])[\)\.\:\]\s-]+\s*(.+)$/i);
             if (letterMatch) {
               optionsObj[letterMatch[1].toUpperCase()] = letterMatch[2].trim();
+            } else if (str && optIdx < letters.length) {
+              optionsObj[letters[optIdx]] = str;
+            }
+          });
+        } else if (q.options && typeof q.options === 'object') {
+          Object.entries(q.options).forEach(([k, v]) => {
+            const cleanKey = String(k).trim().toUpperCase().replace(/[^A-E]/g, '').slice(0, 1);
+            if (cleanKey && v !== undefined && v !== null) {
+              optionsObj[cleanKey] = String(v).trim();
             }
           });
         }
 
+        const rawAns = String(q.correctAnswer || 'A').trim().toUpperCase();
+        const ansMatch = rawAns.match(/([A-E])/);
+        const normalizedAns = ansMatch ? ansMatch[1] : 'A';
+
         return {
-          questionNumber: q.questionNumber || (startNumber + idx),
-          questionText: q.questionText || "Missing question text",
-          options: (Object.keys(optionsObj).length >= 2) ? optionsObj : { "A": "Option A", "B": "Option B", "C": "Option C", "D": "Option D" },
-          correctAnswer: (q.correctAnswer || "A").toUpperCase(),
-          explanation: q.explanation || ""
+          questionNumber: startNumber + idx,
+          questionText: String(q.questionText || q.question || 'Missing question text').trim(),
+          options: (Object.keys(optionsObj).length >= 2)
+            ? optionsObj
+            : { A: 'Option A', B: 'Option B', C: 'Option C', D: 'Option D' },
+          correctAnswer: normalizedAns,
+          explanation: String(q.explanation || '').trim()
         };
       });
     }
 
-    function buildGenerationPrompt(examName, subjects, difficulty, qCount, style, startNumber = 1) {
-      const styleDesc = style === 'case-study'
-        ? "Include case-study based scenarios for some questions."
-        : "Standard MCQ style.";
-      const focusText = subjects ? ` focusing on ${subjects}` : '';
+    function buildGenerationPrompt(examName, subjects, difficulty, qCount, style, startNumber = 1, recentStems = [], opts = {}) {
+      const targetExam = opts.targetExam ?? selectedTargetExam;
+      const section = opts.section ?? selectedSection;
+      const includeTricks = opts.includeTricks !== undefined
+        ? opts.includeTricks
+        : Boolean(document.getElementById('ai-tricks-cb')?.checked);
+
+      const sectionLabels = {
+        quant: 'Quantitative Aptitude & Speed Math',
+        reasoning: 'Logical Reasoning',
+        di: 'Data Interpretation (DI)',
+        ga: 'General Awareness / GK',
+        english: 'English Language & Verbal Ability'
+      };
+      const sectionLabel = sectionLabels[section] || 'Competitive Exam Practice';
+
+      let styleDesc = 'Standard competitive exam MCQ style.';
+      if (style === 'speed-drill') {
+        styleDesc = 'Fast calculation / mental-math drill style: concise stems, sharp numerical accuracy, and realistic near-miss distractors.';
+      } else if (style === 'case-study') {
+        styleDesc = 'Caselet / scenario / structured data-set based exam questions.';
+      } else if (style === 'conceptual') {
+        styleDesc = 'Deep conceptual understanding, edge cases, and classic exam trap options.';
+      }
+
+      const examPatternLine = targetExam
+        ? `TARGET EXAM PATTERN: ${targetExam} (${sectionLabel}). Match this exam's authentic style, phrasing, and numerical patterns.`
+        : `SECTION FOCUS: ${sectionLabel}.`;
+      const constraintsLine = subjects
+        ? `EXACT CONSTRAINTS / SUB-TOPICS (MANDATORY): ${subjects}`
+        : '';
       const numberingNote = startNumber > 1
-        ? ` Number questions starting from ${startNumber}. Do not repeat topics from earlier batches.`
+        ? ` Number questions sequentially starting from ${startNumber}. Do not repeat earlier questions.`
+        : '';
+      const avoidNote = recentStems.length > 0
+        ? `\nAVOID REPEATING ANY OF THESE ALREADY-GENERATED QUESTIONS:\n- ${recentStems.slice(-15).join('\n- ')}\n`
+        : '';
+      const diffInstruction = difficulty === 'mixed'
+        ? 'MIXED (roughly 30% Easy, 45% Medium, 25% Hard, progressing in challenge)'
+        : difficulty.toUpperCase();
+
+      const combinedRequest = `${examName} ${subjects}`.toLowerCase();
+      const needsDiTable = section === 'di'
+        || /\b(data interpretation|table di|di\b|missing table|bar chart|tabular)\b/i.test(combinedRequest);
+
+      const diTableRule = needsDiTable
+        ? `\n- DATA INTERPRETATION FORMAT: Include a clean, compact Markdown table (using | Col 1 | Col 2 | and | --- | --- | rows, 3–5 columns and 4–5 rows) right at the start of "questionText" using realistic, cleanly divisible exam numbers, followed by a blank line and the question.`
         : '';
 
-      return `Generate ${qCount} new multiple choice questions strictly for the topic/subject: "${examName}${focusText}". ${styleDesc}${numberingNote}
+      const reasoningRule = section === 'reasoning'
+        ? `\n- REASONING FORMAT: Use clean line breaks inside "questionText" for Statements / Conclusions / Clues so they are easy to read. Every puzzle/syllogism/relation MUST have one unique, airtight logical answer.`
+        : '';
+
+      const trickRule = includeTricks
+        ? `\n- SHORTCUT TRICK IN EXPLANATION: In "explanation", lead with the fastest exam shortcut / Vedic or mental-math trick (e.g., n×(n+1) followed by 25 for numbers ending in 5, unit-digit + cube-range grouping for cube roots, fraction/ratio shortcuts) in 1–2 concise sentences.`
+        : '';
+
+      return `Generate ${qCount} new multiple choice questions strictly for: "${examName}".
+${examPatternLine}
+${constraintsLine}
+STYLE: ${styleDesc}${numberingNote}${avoidNote}
 CRITICAL INSTRUCTIONS:
-- The difficulty level MUST be exactly: ${difficulty.toUpperCase()}.
-- The questions MUST strictly cover ONLY the requested subject/topic/chapters. DO NOT generate questions out of syllabus.
-- Every question MUST have EXACTLY ONE unequivocally correct answer. The three incorrect options (distractors) MUST be highly plausible, challenging, and represent common misconceptions or calculation errors to test deep understanding. However, they must be definitively incorrect so no two options can be argued as right.
-- The correct answer MUST be randomly distributed across options A, B, C, and D. Do NOT make 'A' the correct answer for every question.
-- Format exactly as a valid JSON array:
+- The difficulty level MUST be: ${diffInstruction}.
+- OBEY EVERY CONSTRAINT IN THE REQUEST LITERALLY (for example: if the user asks for "two-digit numbers ending with 5", ONLY use numbers from {15, 25, 35, 45, 55, 65, 75, 85, 95}; if the user asks for "cube roots", use exact perfect cubes). NEVER drift outside the requested topic or number range.
+- If ${qCount} is larger than the number of unique base items (e.g. only 9 two-digit numbers end in 5), stay 100% inside that exact constraint by varying question angles: direct calculation, reverse root/number finding, sum/difference of two such values, missing digit, or comparison—never break the constraint.
+- ARITHMETIC & LOGIC VERIFICATION: Carefully compute and DOUBLE-CHECK every single mathematical step BEFORE writing the options and "correctAnswer". Confirm that the option text under "correctAnswer" equals the exact verified answer.
+- Every question MUST have EXACTLY ONE unequivocally correct answer. Make the 3 distractors realistic calculation-trap values (e.g., off in tens/hundreds digit, common formula error) so guessing is hard.
+- Randomly distribute "correctAnswer" across A, B, C, and D. Do NOT repeat the same letter consecutively.${diTableRule}${reasoningRule}${trickRule}
+- Format strictly as a valid JSON array (no markdown fences, no commentary):
 [
   {
     "questionNumber": ${startNumber},
     "questionText": "...",
     "options": ["A) ...", "B) ...", "C) ...", "D) ..."],
-    "correctAnswer": "<random letter A, B, C, or D>",
-    "explanation": "..."
+    "correctAnswer": "<single letter A, B, C, or D>",
+    "explanation": "Concise 1-2 sentence explanation with shortcut trick."
   }
 ]
-Ensure questions are exam-appropriate, highly accurate, and have options starting with A), B), C), D). Output ONLY the JSON array.`;
+Output ONLY the valid JSON array.`;
     }
 
     async function parseAiQuestionResponse(resultText) {
-      let jsonText = resultText.trim();
-      if (jsonText.startsWith('```')) {
-        jsonText = jsonText.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
+      const parsed = extractJsonPayload(resultText);
+      const list = Array.isArray(parsed)
+        ? parsed
+        : (Array.isArray(parsed?.questions) ? parsed.questions : null);
+      if (!list || list.length === 0) {
+        throw new Error('AI response did not contain a valid list of questions.');
       }
-
-      const parsed = JSON.parse(jsonText);
-      if (!Array.isArray(parsed) || parsed.length === 0) {
-        throw new Error("AI response was not a valid question array.");
-      }
-      return parsed;
+      return list;
     }
 
     function updateContinuousUI() {
@@ -2741,15 +4035,18 @@ Ensure questions are exam-appropriate, highly accurate, and have options startin
         ? Math.max(...questions.map(q => q.questionNumber)) + 1
         : 1;
       const difficulty = getContinuousBatchDifficulty(nextBatchNum);
-      const { examName, subjects, style } = continuousConfig;
+      const { examName, subjects, style, targetExam, section, includeTricks } = continuousConfig;
 
+      const recentStems = questions.slice(-15).map(q => q.questionText.slice(0, 120));
       const prompt = buildGenerationPrompt(
         examName,
         subjects,
         difficulty,
         CONTINUOUS_BATCH_SIZE,
         style,
-        startNum
+        startNum,
+        recentStems,
+        { targetExam, section, includeTricks }
       );
 
       try {
@@ -2801,85 +4098,6 @@ Ensure questions are exam-appropriate, highly accurate, and have options startin
       }
     }
 
-    // File Drag & Drop Zones setup
-    function initDragAndDrop() {
-      const zones = [
-        { id: 'qp-drop-zone', inputId: 'qp-file-input', infoId: 'qp-file-info' },
-        { id: 'ak-drop-zone', inputId: 'ak-file-input', infoId: 'ak-file-info' }
-      ];
- 
-      zones.forEach(z => {
-        const dropZone = document.getElementById(z.id);
-        const input = document.getElementById(z.inputId);
-        const info = document.getElementById(z.infoId);
- 
-        ['dragenter', 'dragover'].forEach(name => {
-          dropZone.addEventListener(name, (e) => {
-            e.preventDefault();
-            dropZone.classList.add('dragover');
-          });
-        });
- 
-        ['dragleave', 'drop'].forEach(name => {
-          dropZone.addEventListener(name, (e) => {
-            e.preventDefault();
-            dropZone.classList.remove('dragover');
-          });
-        });
- 
-        dropZone.addEventListener('drop', (e) => {
-          const files = e.dataTransfer.files;
-          if (files.length > 0) {
-            let tooLarge = false;
-            for (let i = 0; i < files.length; i++) {
-              if (files[i].size > 20 * 1024 * 1024) {
-                tooLarge = true;
-                break;
-              }
-            }
-            if (tooLarge) {
-              showToast("Error: One or more files exceed the 20MB limit.", "error");
-              return;
-            }
-            input.files = files;
-            updateFileInfo(files, info);
-          }
-        });
- 
-        input.addEventListener('change', (e) => {
-          if (input.files.length > 0) {
-            let tooLarge = false;
-            for (let i = 0; i < input.files.length; i++) {
-              if (input.files[i].size > 20 * 1024 * 1024) {
-                tooLarge = true;
-                break;
-              }
-            }
-            if (tooLarge) {
-              showToast("Error: One or more files exceed the 20MB limit.", "error");
-              input.value = '';
-              return;
-            }
-            updateFileInfo(input.files, info);
-          }
-        });
-      });
-    }
- 
-    function updateFileInfo(files, infoEl) {
-      if (files.length === 1) {
-        const file = files[0];
-        infoEl.textContent = `📄 Selected: ${escapeHTML(file.name)} (${(file.size / 1024).toFixed(1)} KB)`;
-      } else {
-        const names = Array.from(files).map(f => f.name).join(', ');
-        const totalSize = Array.from(files).reduce((acc, f) => acc + f.size, 0);
-        infoEl.textContent = `📄 Selected ${files.length} files: ${escapeHTML(names)} (${(totalSize / 1024).toFixed(1)} KB)`;
-      }
-      infoEl.classList.remove('hidden');
-    }
-
-    // --- PARSING & OCR CORE ALGORITHMS ---
-
     // XSS Prevention: Safe HTML escaping helper
     function escapeHTML(str) {
       if (typeof str !== 'string') return str;
@@ -2891,400 +4109,80 @@ Ensure questions are exam-appropriate, highly accurate, and have options startin
         .replace(/'/g, '&#039;');
     }
 
-    // Read PDF or Image files
-    function extractTextFromFile(file, progressId) {
-      return new Promise((resolve, reject) => {
-        const loaderProgress = document.getElementById(progressId);
-        
-        if (file.type === 'text/plain') {
-          const reader = new FileReader();
-          reader.onload = (e) => resolve(e.target.result);
-          reader.onerror = () => reject(new Error('Failed to read plain text file.'));
-          reader.readAsText(file);
-        } else if (file.type === 'application/pdf') {
-          loaderProgress.textContent = "Loading PDF Engine...";
-          const reader = new FileReader();
-          reader.onload = async function() {
-            try {
-              const typedarray = new Uint8Array(this.result);
-              const pdf = await pdfjsLib.getDocument({ data: typedarray }).promise;
-              let text = '';
-              const total = pdf.numPages;
-              
-              for (let i = 1; i <= total; i++) {
-                loaderProgress.textContent = `Extracting PDF Page ${i} / ${total}...`;
-                const page = await pdf.getPage(i);
-                const textContent = await page.getTextContent();
-                
-                let lastY = -1;
-                let pageText = '';
-                
-                for (const item of textContent.items) {
-                  const y = item.transform[5];
-                  if (lastY !== -1 && Math.abs(y - lastY) > 5) {
-                    pageText += '\n';
-                  } else if (pageText.length > 0 && !pageText.endsWith('\n') && !item.str.startsWith(' ')) {
-                    pageText += ' ';
-                  }
-                  pageText += item.str;
-                  lastY = y;
-                }
-                text += pageText + '\n\n';
-              }
-              resolve(text);
-            } catch (err) {
-              reject(new Error("PDF text extraction failed: " + err.message));
-            }
-          };
-          reader.onerror = () => reject(new Error("Failed to read PDF file binary."));
-          reader.readAsArrayBuffer(file);
-        } else if (file.type.startsWith('image/')) {
-          loaderProgress.textContent = "Initializing Image OCR...";
-          
-          Tesseract.recognize(
-            file,
-            'eng',
-            {
-              logger: m => {
-                if (m.status === 'recognizing text') {
-                  loaderProgress.textContent = `Performing OCR: ${Math.round(m.progress * 100)}%`;
-                }
-              }
-            }
-          ).then(({ data: { text } }) => {
-            resolve(text);
-          }).catch(err => {
-            reject(new Error("Image OCR failed: " + err.message));
-          });
-        } else {
-          // Attempt generic text read
-          const reader = new FileReader();
-          reader.onload = (e) => resolve(e.target.result);
-          reader.onerror = () => reject(new Error('Unsupported file format.'));
-          reader.readAsText(file);
+    // Safely format question text: preserves line breaks, renders Markdown tables (for DI) as accessible responsive tables, and prettifies simple math powers
+    function formatQuestionHTML(rawText) {
+      const normalized = String(rawText || '').replace(/\r\n/g, '\n').trim();
+      const lines = normalized.split('\n');
+      const blocks = [];
+      let textBuf = [];
+
+      const flushText = () => {
+        if (textBuf.length > 0) {
+          const escaped = escapeHTML(textBuf.join('\n'))
+            .replace(/(\w|\))\^2\b/g, '$1²')
+            .replace(/(\w|\))\^3\b/g, '$1³');
+          blocks.push(`<div class="q-formatted-block">${escaped}</div>`);
+          textBuf = [];
         }
-      });
-    }
+      };
 
-    // MCQ Options Parser
-    function extractOptions(blockText) {
-      const cleanText = blockText.replace(/\r\n/g, '\n');
-      const options = {};
-      
-      const optionRegex = /(?:^|\s)(?:\(|\[)?([A-Ea-e])(?:\.|\)|\-|\])\s+([\s\S]+?)(?=(?:\s+(?:\(|\[)?[A-Ea-e](?:\.|\)|\-|\])\s+)|$)/g;
-      
-      let match;
-      const matches = [];
-      while ((match = optionRegex.exec(cleanText)) !== null) {
-        matches.push({
-          index: match.index,
-          key: match[1].toUpperCase(),
-          value: match[2].trim()
-        });
-      }
-      
-      if (matches.length >= 2) {
-        let firstOptionIndex = matches[0].index;
-        let questionBody = cleanText.substring(0, firstOptionIndex).trim();
-        
-        matches.forEach(m => {
-          options[m.key] = m.value;
-        });
-        
-        return { questionBody, options };
-      }
-      
-      // Fallback: numbered options (1-4)
-      const numOptionRegex = /(?:^|\s)(?:\(|\[)?([1-4])(?:\.|\)|\-|\])\s+([\s\S]+?)(?=(?:\s+(?:\(|\[)?[1-4](?:\.|\)|\-|\])\s+)|$)/g;
-      const numMatches = [];
-      while ((match = numOptionRegex.exec(cleanText)) !== null) {
-        numMatches.push({
-          index: match.index,
-          key: match[1],
-          value: match[2].trim()
-        });
-      }
-      
-      if (numMatches.length >= 2) {
-        let firstOptionIndex = numMatches[0].index;
-        let questionBody = cleanText.substring(0, firstOptionIndex).trim();
-        
-        numMatches.forEach(m => {
-          const keyMap = { '1': 'A', '2': 'B', '3': 'C', '4': 'D' };
-          options[keyMap[m.key]] = m.value;
-        });
-        
-        return { questionBody, options };
-      }
-      
-      return { questionBody: cleanText, options: null };
-    }
+      const isTableRow = (line) => {
+        const trimmed = line.trim();
+        return trimmed.includes('|') && trimmed.replace(/\|/g, '').trim().length > 0;
+      };
 
-    // Parse question sheet
-    function parseQuestionSheet(text) {
-      const normalized = text.replace(/\r\n/g, '\n') + '\n\n';
-      
-      // Boundaries matching numbers (e.g. 1. or Q1. or [1])
-      const qStartRegex = /^[ \t]*(?:(?:Q|q)uestion\s*|Q\s*)?\[?(\d+)\]?[\.\:\-\)\s]+/gm;
-      
-      const parsedQuestions = [];
-      const matches = [];
-      let match;
-      
-      while ((match = qStartRegex.exec(normalized)) !== null) {
-        matches.push({
-          number: parseInt(match[1], 10),
-          index: match.index,
-          fullMarker: match[0]
-        });
-      }
-      
-      if (matches.length === 0) {
-        return [];
-      }
-      
-      for (let i = 0; i < matches.length; i++) {
-        const startIdx = matches[i].index + matches[i].fullMarker.length;
-        const endIdx = (i + 1 < matches.length) ? matches[i + 1].index : normalized.length;
-        const rawBlock = normalized.substring(startIdx, endIdx).trim();
-        const qNum = matches[i].number;
-        
-        const parsed = extractOptions(rawBlock);
-        let qText = parsed.questionBody.trim();
-        qText = qText.replace(/^[\.\:\-\)\s]+/, '').trim();
-        
-        parsedQuestions.push({
-          questionNumber: qNum,
-          questionText: qText,
-          options: parsed.options || { "A": "A", "B": "B", "C": "C", "D": "D" },
-          correctAnswer: "",
-          explanation: ""
-        });
-      }
-      
-      return parsedQuestions;
-    }
+      const isSeparatorRow = (line) => {
+        const trimmed = line.trim();
+        return /^\|?(\s*:?-{2,}:?\s*\|)+\s*:?-{2,}:?\s*\|?$/.test(trimmed);
+      };
 
-    // Merge bilingual or duplicate question numbers
-    function mergeBilingualQuestions(list) {
-      const uniqueQuestions = [];
-      const map = {};
+      const parseRowCells = (line) => {
+        let trimmed = line.trim();
+        if (trimmed.startsWith('|')) trimmed = trimmed.slice(1);
+        if (trimmed.endsWith('|')) trimmed = trimmed.slice(0, -1);
+        return trimmed.split('|').map(c => c.trim());
+      };
 
-      list.forEach(q => {
-        const num = q.questionNumber;
-        if (!map[num]) {
-          // Clone and add
-          const clone = JSON.parse(JSON.stringify(q));
-          map[num] = clone;
-          uniqueQuestions.push(clone);
-        } else {
-          const existing = map[num];
-          
-          // Merge Question Text (avoid duplicates)
-          const cleanExistingText = existing.questionText.trim();
-          const cleanNewText = q.questionText.trim();
-          if (cleanExistingText !== cleanNewText && !cleanExistingText.includes(cleanNewText)) {
-            existing.questionText = cleanExistingText + "\n\n" + cleanNewText;
+      let i = 0;
+      while (i < lines.length) {
+        if (i + 1 < lines.length && isTableRow(lines[i]) && isSeparatorRow(lines[i + 1])) {
+          flushText();
+          const headers = parseRowCells(lines[i]);
+          i += 2;
+          const bodyRows = [];
+          while (i < lines.length && isTableRow(lines[i]) && !isSeparatorRow(lines[i])) {
+            bodyRows.push(parseRowCells(lines[i]));
+            i++;
           }
-          
-          // Merge Options key-by-key
-          if (existing.options && q.options) {
-            const allKeys = new Set([...Object.keys(existing.options), ...Object.keys(q.options)]);
-            allKeys.forEach(k => {
-              const val1 = (existing.options[k] || '').trim();
-              const val2 = (q.options[k] || '').trim();
-              if (val1 && val2) {
-                if (val1.toLowerCase() === val2.toLowerCase()) {
-                  existing.options[k] = val1; // identical option content, keep one
-                } else {
-                  existing.options[k] = `${val1} / ${val2}`;
-                }
-              } else {
-                existing.options[k] = val1 || val2;
-              }
-            });
-          }
-          
-          // Merge explanation if different
-          if (q.explanation && q.explanation.trim()) {
-            if (!existing.explanation) {
-              existing.explanation = q.explanation;
-            } else if (!existing.explanation.includes(q.explanation)) {
-              existing.explanation += " " + q.explanation;
-            }
-          }
-          
-          // If correct answer is set in duplicate but not in existing
-          if (!existing.correctAnswer && q.correctAnswer) {
-            existing.correctAnswer = q.correctAnswer;
-          }
-        }
-      });
 
-      return uniqueQuestions;
-    }
+          if (headers.length >= 2 && bodyRows.length > 0) {
+            const headHtml = headers.map(h => `<th scope="col">${escapeHTML(h)}</th>`).join('');
+            const bodyHtml = bodyRows.map(row => {
+              const cells = headers.map((h, colIdx) => {
+                const val = escapeHTML(row[colIdx] ?? '');
+                if (colIdx === 0) return `<th scope="row">${val}</th>`;
+                return `<td data-label="${escapeHTML(h)}">${val}</td>`;
+              }).join('');
+              return `<tr>${cells}</tr>`;
+            }).join('');
 
-    // Answer Key Parser supporting keys: 1.A, 1=A, Q1. A, 1) A, 1-A, CSV 1,A
-    function parseAnswerKeySheet(text) {
-      const normalized = text.trim();
-      if (!normalized) return {};
-      
-      const answers = {};
-      
-      // Standard pairs e.g. 1. A, Q2: C, 3) B, 4-A, 5=A, 6B
-      const pairRegex = /(?:^|[,;\s\t\n]+)(?:Q|q)?(\d+)\s*[\.\:\-\=\)]?\s*([A-Ea-e])(?=[,;\s\t\n]+|$)/g;
-      let match;
-      let pairCount = 0;
-      
-      while ((match = pairRegex.exec(normalized)) !== null) {
-        const qNum = parseInt(match[1], 10);
-        const ans = match[2].toUpperCase();
-        answers[qNum] = ans;
-        pairCount++;
-      }
-      
-      if (pairCount > 0) return answers;
-      
-      // CSV Split
-      const lines = normalized.split(/\r?\n/);
-      let csvCount = 0;
-      lines.forEach(line => {
-        const parts = line.split(/[,\t]/);
-        if (parts.length >= 2) {
-          const qNum = parseInt(parts[0].trim(), 10);
-          const ans = parts[1].trim().toUpperCase();
-          if (!isNaN(qNum) && /^[A-E]$/.test(ans)) {
-            answers[qNum] = ans;
-            csvCount++;
-          }
-        }
-      });
-      
-      if (csvCount > 0) return answers;
-      
-      // One sequential letter per line
-      let sequentialCount = 0;
-      const seqAnswers = {};
-      lines.forEach((line, index) => {
-        const cleaned = line.trim().toUpperCase();
-        if (/^[A-E]$/.test(cleaned)) {
-          seqAnswers[index + 1] = cleaned;
-          sequentialCount++;
-        }
-      });
-      
-      if (sequentialCount > 0) return seqAnswers;
-      
-      // Raw string ACBD
-      const cleanedSeq = normalized.replace(/[\s,;\.\-]/g, '').toUpperCase();
-      if (/^[A-E]+$/.test(cleanedSeq)) {
-        const seqAnswers2 = {};
-        for (let i = 0; i < cleanedSeq.length; i++) {
-          seqAnswers2[i + 1] = cleanedSeq[i];
-        }
-        return seqAnswers2;
-      }
-      
-      return {};
-    }
-
-    // --- UPLOAD VIEW LOGIC ---
-
-    async function handleUploadParseProceed() {
-      resetContinuousMode();
-      const qpInput = document.getElementById('qp-file-input');
-      const akInput = document.getElementById('ak-file-input');
-      const qpManual = document.getElementById('qp-manual-text').value.trim();
-      const akManual = document.getElementById('ak-manual-text').value.trim();
-      
-      const loader = document.getElementById('parse-loading');
-      const progressText = document.getElementById('parse-progress-text');
-      
-      const hasQP = (qpInput.files.length > 0) || qpManual.length > 0;
-      
-      if (!hasQP) {
-        showToast("Question sheet upload or pasted text is required.", "error");
-        return;
-      }
-      
-      loader.classList.remove('hidden');
-      
-      try {
-        let allParsedQuestions = [];
-        let globalQuestionCount = 0;
-        const shouldMerge = document.getElementById('merge-bilingual-cb').checked;
-
-        if (qpInput.files.length > 0) {
-          const qpFiles = Array.from(qpInput.files).sort((a, b) => a.name.localeCompare(b.name, undefined, {numeric: true, sensitivity: 'base'}));
-          const akFiles = Array.from(akInput.files).sort((a, b) => a.name.localeCompare(b.name, undefined, {numeric: true, sensitivity: 'base'}));
-          
-          for (let i = 0; i < qpFiles.length; i++) {
-            progressText.textContent = `Extracting Question Paper ${i + 1} of ${qpFiles.length}: ${qpFiles[i].name}...`;
-            const qText = await extractTextFromFile(qpFiles[i], 'parse-progress-text');
-            
-            let aText = '';
-            if (i < akFiles.length) {
-              progressText.textContent = `Extracting Answer Key ${i + 1} of ${akFiles.length}: ${akFiles[i].name}...`;
-              aText = await extractTextFromFile(akFiles[i], 'parse-progress-text');
-            }
-            
-            const parsedQs = parseQuestionSheet(qText);
-            const answersMatchedLocal = parseAnswerKeySheet(aText);
-            
-            if (parsedQs.length > 0) {
-              // Apply bilingual merge local to this set if checked
-              let setQs = shouldMerge ? mergeBilingualQuestions(parsedQs) : parsedQs;
-              
-              // Renumber and match answers with offset
-              setQs.forEach((q, idx) => {
-                const originalNum = q.questionNumber;
-                const newNum = globalQuestionCount + idx + 1;
-                q.questionNumber = newNum;
-                q.sourcePaper = qpFiles[i].name;
-                
-                if (answersMatchedLocal[originalNum]) {
-                  q.correctAnswer = answersMatchedLocal[originalNum];
-                }
-              });
-              
-              globalQuestionCount += setQs.length;
-              allParsedQuestions = allParsedQuestions.concat(setQs);
-            }
+            blocks.push(`
+              <div tabindex="0" role="region" aria-label="Data Interpretation Table" class="di-table-wrapper">
+                <table class="di-table">
+                  <thead><tr>${headHtml}</tr></thead>
+                  <tbody>${bodyHtml}</tbody>
+                </table>
+              </div>
+            `);
           }
         } else {
-          // Process manually pasted text
-          progressText.textContent = "Parsing pasted question sheet...";
-          const parsedQs = parseQuestionSheet(qpManual);
-          const answersMatchedLocal = parseAnswerKeySheet(akManual);
-          
-          let setQs = shouldMerge ? mergeBilingualQuestions(parsedQs) : parsedQs;
-          setQs.forEach(q => {
-            q.sourcePaper = "Pasted Text";
-            if (answersMatchedLocal[q.questionNumber]) {
-              q.correctAnswer = answersMatchedLocal[q.questionNumber];
-            }
-          });
-          allParsedQuestions = setQs;
+          textBuf.push(lines[i]);
+          i++;
         }
-        
-        if (allParsedQuestions.length === 0) {
-          throw new Error("No numbered questions parsed from the input. Check formatting.");
-        }
-        
-        questions = allParsedQuestions;
-        
-        // Refresh Review view
-        buildPreviewEditorList();
-        updatePreviewAnalytics();
-        
-        loader.classList.add('hidden');
-        switchView('setup-view', 'preview-view');
-        showToast(`Parsed ${questions.length} questions successfully!`, 'success');
-        
-      } catch (err) {
-        loader.classList.add('hidden');
-        showToast("Parsing failed: " + err.message, "error");
       }
+      flushText();
+
+      return blocks.join('');
     }
 
     // --- AI GENERATION FEATURE ---
@@ -3292,45 +4190,87 @@ Ensure questions are exam-appropriate, highly accurate, and have options startin
     async function handleAIGenerateExam() {
       const apiKey = getApiKey();
       if (!apiKey) {
-        showToast("🔒 API key required. Please enter an API key in the configuration modal or settings bar.", "error");
+        showToast("🔒 API key required. Please enter an API key in the top bar or ⚙️ Configure.", "error");
         openSettingsModal();
         return;
       }
 
-      const examName = document.getElementById('ai-exam-name').value.trim();
+      const examInput = document.getElementById('ai-exam-name');
+      const examName = examInput.value.trim();
       const subjects = document.getElementById('ai-subjects').value.trim();
       const isUnlimited = document.getElementById('ai-unlimited-cb').checked;
-      const qCount = isUnlimited ? CONTINUOUS_BATCH_SIZE : document.getElementById('ai-count').value;
+      const includeTricks = Boolean(document.getElementById('ai-tricks-cb')?.checked);
+      const totalRequested = isUnlimited ? CONTINUOUS_BATCH_SIZE : (parseInt(document.getElementById('ai-count').value, 10) || 10);
       const difficulty = isUnlimited ? 'easy' : document.getElementById('ai-difficulty').value;
       const style = document.getElementById('ai-style').value;
       
       if (!examName) {
-        showToast("Please fill in the Exam Name / Topic.", "error");
+        examInput.checkValidity();
+        examInput.focus();
+        showToast("Please fill in the Topic / Exact Question Request.", "error");
         return;
       }
 
       resetContinuousMode();
       if (isUnlimited) {
         continuousMode = true;
-        continuousConfig = { examName, subjects, style };
+        continuousConfig = {
+          examName,
+          subjects,
+          style,
+          targetExam: selectedTargetExam,
+          section: selectedSection,
+          includeTricks
+        };
         continuousBatchNumber = 1;
         continuousStopped = false;
       }
 
+      const genBtn = document.getElementById('ai-generate-btn');
       const loader = document.getElementById('generate-loading');
       const progressText = document.getElementById('generate-progress-text');
+      if (genBtn) genBtn.disabled = true;
       loader.classList.remove('hidden');
-      progressText.textContent = isUnlimited
-        ? 'Generating first batch of 15 easy questions...'
-        : 'Generating exam set...';
-      
-      const prompt = buildGenerationPrompt(examName, subjects, difficulty, qCount, style);
+
+      const systemPrompt = 'You are an expert competitive-exam question setter (SSC, Banking/IBPS, Railways, UPSC CSAT, Quant, Reasoning, Data Interpretation). Verify all arithmetic accurately and output strictly valid JSON arrays.';
+      const MAX_PER_BATCH = 20;
 
       try {
-        const systemPrompt = 'You are an expert academic examiner that outputs valid JSON lists of mock questions.';
-        const resultText = await callAiCompletions(prompt, systemPrompt, 3, 1000);
-        const parsed = await parseAiQuestionResponse(resultText);
-        questions = mapParsedQuestions(parsed);
+        const allGenerated = [];
+        const batchCount = totalRequested > 25 ? Math.ceil(totalRequested / MAX_PER_BATCH) : 1;
+
+        for (let b = 0; b < batchCount; b++) {
+          const remaining = totalRequested - allGenerated.length;
+          const batchSize = batchCount === 1 ? totalRequested : Math.min(MAX_PER_BATCH, remaining);
+          const startNum = allGenerated.length + 1;
+
+          if (isUnlimited) {
+            progressText.textContent = 'Generating first batch of 15 easy questions...';
+          } else if (batchCount > 1) {
+            progressText.textContent = `Generating questions ${startNum}–${startNum + batchSize - 1} of ${totalRequested}...`;
+          } else {
+            progressText.textContent = `Generating ${totalRequested} ${difficulty} questions...`;
+          }
+
+          const recentStems = allGenerated.slice(-15).map(q => q.questionText.slice(0, 120));
+          const prompt = buildGenerationPrompt(
+            examName,
+            subjects,
+            difficulty,
+            batchSize,
+            style,
+            startNum,
+            recentStems,
+            { targetExam: selectedTargetExam, section: selectedSection, includeTricks }
+          );
+          const resultText = await callAiCompletions(prompt, systemPrompt, 2, 1200);
+          const parsed = await parseAiQuestionResponse(resultText);
+          const mapped = mapParsedQuestions(parsed, startNum);
+          allGenerated.push(...mapped);
+        }
+
+        questions = allGenerated;
+        setApiStatus('ok', '✓ Connected');
 
         buildPreviewEditorList();
         updatePreviewAnalytics();
@@ -3349,98 +4289,133 @@ Ensure questions are exam-appropriate, highly accurate, and have options startin
         loader.classList.add('hidden');
         resetContinuousMode();
         showToast("Generation failed: " + err.message, "error");
+      } finally {
+        if (genBtn) genBtn.disabled = false;
       }
     }
 
-    // Call AI API with retry and exponential backoff
-    async function callAiCompletions(prompt, systemPrompt, retries = 3, delay = 1000, signal = null) {
+    function modelDisallowsTemperature(modelId) {
+      const m = (modelId || '').toLowerCase();
+      return /^(?:openai\/)?(o1|o3|o4|gpt-5|gpt-6)/.test(m)
+        || m.includes('deepseek-reasoner')
+        || /claude-(?:opus|sonnet|haiku)-5/.test(m);
+    }
+
+    // Call AI API with smart provider support, fail-fast on 4xx, and backoff retry on 429/5xx
+    async function callAiCompletions(prompt, systemPrompt, retries = 2, delay = 1200, signal = null, omitTemperature = false) {
       const apiKey = getApiKey();
       if (!apiKey) {
         throw new Error("🔒 API key required. Please enter an API key.");
       }
 
-      const endpoint = preferences.apiEndpoint || 'https://api.openai.com/v1/chat/completions';
+      const preset = PROVIDER_PRESETS[preferences.preset] || PROVIDER_PRESETS.gemini;
+      const endpoint = preferences.apiEndpoint || preset.endpoint;
+      const modelId = (preferences.customModel || '').trim() || preferences.modelChoice || preset.models[0]?.value;
       const isAnthropic = preferences.preset === 'anthropic' || endpoint.includes('api.anthropic.com');
+      const isGeminiNative = endpoint.includes('generativelanguage.googleapis.com') && endpoint.includes(':generateContent');
 
-      // Build headers
-      const headers = {
-        'Content-Type': 'application/json'
-      };
+      const headers = buildProviderHeaders({
+        apiKey,
+        authHeaderName: preferences.authHeaderName,
+        authPrefix: preferences.authHeaderPrefix,
+        customHeadersStr: preferences.customHeaders,
+        presetKey: preferences.preset,
+        endpoint
+      });
 
-      // Set authorization header if key is provided
-      const authHeaderName = preferences.authHeaderName || 'Authorization';
-      const authPrefix = preferences.authHeaderPrefix !== undefined ? preferences.authHeaderPrefix : 'Bearer ';
-      headers[authHeaderName] = `${authPrefix}${apiKey}`;
+      const sendTemp = !omitTemperature && !modelDisallowsTemperature(modelId);
 
-      // Load custom JSON headers if present
-      if (preferences.customHeaders) {
-        try {
-          const parsedHeaders = JSON.parse(preferences.customHeaders);
-          Object.assign(headers, parsedHeaders);
-        } catch (e) {
-          console.error('Failed to parse custom headers JSON:', e);
-        }
-      }
-
-      // Build body payload
+      // Build provider-specific request payload
       let body;
-      if (isAnthropic) {
+      if (isGeminiNative) {
         body = {
-          model: preferences.modelChoice,
-          system: systemPrompt,
-          messages: [
-            { role: 'user', content: prompt }
-          ],
-          max_tokens: 4096,
-          temperature: 0.5
+          system_instruction: { parts: [{ text: systemPrompt }] },
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: sendTemp ? { temperature: 0.5 } : {}
         };
+      } else if (isAnthropic) {
+        body = {
+          model: modelId,
+          system: systemPrompt,
+          messages: [{ role: 'user', content: prompt }],
+          max_tokens: 8192
+        };
+        if (sendTemp) body.temperature = 0.5;
       } else {
         body = {
-          model: preferences.modelChoice,
+          model: modelId,
           messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: prompt }
-          ],
-          temperature: 0.5
+          ]
         };
+        if (sendTemp) body.temperature = 0.5;
       }
 
       try {
         const response = await fetch(endpoint, {
           method: 'POST',
-          headers: headers,
+          headers,
           body: JSON.stringify(body),
           signal: signal || undefined
         });
 
         if (!response.ok) {
-          const errData = await response.json().catch(() => ({}));
-          const errMsg = errData.error?.message || errData.error || `HTTP ${response.status}`;
-          throw new Error(errMsg);
+          const rawErr = await response.text().catch(() => '');
+          const errMsg = extractApiErrorMessage(rawErr, response.status);
+
+          // Automatic one-time fallback if a model rejects the `temperature` parameter
+          if (response.status === 400 && sendTemp && /temperature|unsupported.*param/i.test(rawErr)) {
+            return callAiCompletions(prompt, systemPrompt, retries, delay, signal, true);
+          }
+
+          const err = new Error(errMsg);
+          err.httpStatus = response.status;
+          // Do not retry non-transient client errors (400, 401, 403, 404, 422)
+          err.noRetry = response.status >= 400 && response.status < 500 && response.status !== 429 && response.status !== 408;
+          if (response.status === 401 || response.status === 403) {
+            setApiStatus('err', `✗ Auth Error (${response.status})`);
+          }
+          throw err;
         }
 
         const data = await response.json();
-        
-        if (isAnthropic) {
-          if (data.content && data.content[0]) {
-            return data.content[0].text || '';
-          }
-          throw new Error('Anthropic direct response format was unexpected.');
-        } else {
-          return data.choices?.[0]?.message?.content || data.choices?.[0]?.text || '';
+
+        if (isGeminiNative) {
+          const parts = data.candidates?.[0]?.content?.parts || [];
+          const text = parts.map(p => p.text || '').join('').trim();
+          if (text) return text;
+          throw new Error('Gemini native API returned an empty response.');
         }
+
+        if (isAnthropic) {
+          const textBlock = (data.content || []).find(b => b.type === 'text') || data.content?.[0];
+          if (textBlock?.text) return textBlock.text;
+          throw new Error('Anthropic response format was unexpected.');
+        }
+
+        const content = data.choices?.[0]?.message?.content || data.choices?.[0]?.text || '';
+        if (!content) {
+          throw new Error('AI returned an empty response. Try again or pick another model.');
+        }
+        return content;
 
       } catch (err) {
         if (signal?.aborted || err.name === 'AbortError') {
           throw err;
         }
-        if (retries > 0) {
-          showToast(`Request failed. Retrying in ${(delay / 1000).toFixed(1)}s...`, 'info');
-          await new Promise(r => setTimeout(r, delay));
-          return callAiCompletions(prompt, systemPrompt, retries - 1, delay * 2, signal);
-        } else {
-          throw err;
+        if (err instanceof TypeError && /fetch/i.test(err.message)) {
+          const corsErr = new Error(`Network or CORS error connecting to ${endpoint}. Click "⚡ Test & Sync" to diagnose, or check your internet/provider.`);
+          corsErr.noRetry = true;
+          setApiStatus('err', '✗ Network / CORS Error');
+          throw corsErr;
         }
+        if (!err.noRetry && retries > 0) {
+          showToast(`Temporary error (${err.message}). Retrying in ${(delay / 1000).toFixed(1)}s...`, 'info');
+          await new Promise(r => setTimeout(r, delay));
+          return callAiCompletions(prompt, systemPrompt, retries - 1, delay * 2, signal, omitTemperature);
+        }
+        throw err;
       }
     }
 
@@ -3491,14 +4466,8 @@ ${questionListText}`;
 
       try {
         const systemPrompt = "You are a helpful and expert academic tutor that solves multiple-choice questions and outputs valid JSON arrays.";
-        const resultText = await callAiCompletions(prompt, systemPrompt, 3, 1000);
-        
-        let jsonText = resultText.trim();
-        if (jsonText.startsWith('```')) {
-          jsonText = jsonText.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
-        }
-        
-        const solvedAnswers = JSON.parse(jsonText);
+        const resultText = await callAiCompletions(prompt, systemPrompt, 2, 1000);
+        const solvedAnswers = extractJsonPayload(resultText);
         if (!Array.isArray(solvedAnswers)) {
           throw new Error("AI did not return a valid array of answers.");
         }
@@ -3546,12 +4515,8 @@ ${questionListText}`;
 
       questions.forEach((q, idx) => {
         const card = document.createElement('div');
-        const isSystemGenerated = !q.isManual;
-        card.className = 'question-editor-card' + (isSystemGenerated ? ' system-generated-card' : '');
+        card.className = 'question-editor-card';
         card.dataset.index = idx;
-        
-        const readonlyAttr = isSystemGenerated ? 'readonly' : '';
-        const readonlyClass = isSystemGenerated ? 'readonly-field' : '';
         
         const optionsList = q.options ? Object.entries(q.options) : [['A', ''], ['B', ''], ['C', ''], ['D', '']];
         let optionsMarkup = '';
@@ -3560,7 +4525,7 @@ ${questionListText}`;
           optionsMarkup += `
             <div class="option-input-group">
               <span>${letter}:</span>
-              <input type="text" class="opt-input ${readonlyClass}" data-letter="${letter}" value="${escapeHTML(text)}" ${readonlyAttr}>
+              <input type="text" class="opt-input" data-letter="${letter}" value="${escapeHTML(text)}">
             </div>
           `;
         });
@@ -3572,17 +4537,14 @@ ${questionListText}`;
           correctOptionsMarkup += `<option value="${k}" ${selected}>${k}</option>`;
         });
 
-        const sourceText = q.sourcePaper ? `<span style="font-size: 0.75rem; color: var(--text-secondary); margin-left: 10px;">📄 Source: ${escapeHTML(q.sourcePaper)}</span>` : '';
-        const lockText = isSystemGenerated ? `<span style="font-size: 0.75rem; color: var(--warning); margin-left: 10px; font-weight: 500;" title="System generated question text is locked. You can delete the full question, but not edit its text.">🔒 Text Locked</span>` : '';
-
         card.innerHTML = `
           <div class="q-card-header">
-            <span class="q-card-title">Question Number: <input type="number" class="form-control q-num-edit" style="width: 70px; display:inline-block; padding: 4px 8px; min-height:auto;" value="${q.questionNumber}">${sourceText}${lockText}</span>
-            <button class="btn btn-danger btn-icon-only remove-q-btn" aria-label="Delete question">🗑️</button>
+            <span class="q-card-title">Question Number: <input type="number" class="form-control q-num-edit" style="width: 70px; display:inline-block; padding: 4px 8px; min-height:auto;" value="${q.questionNumber}"></span>
+            <button type="button" class="btn btn-danger btn-icon-only remove-q-btn" aria-label="Delete question">🗑️</button>
           </div>
           
           <div class="form-group" style="margin-bottom: 8px;">
-            <textarea class="form-control q-text-edit ${readonlyClass}" rows="2" ${readonlyAttr}>${escapeHTML(q.questionText)}</textarea>
+            <textarea class="form-control q-text-edit" rows="2">${escapeHTML(q.questionText)}</textarea>
           </div>
           
           <div class="option-grid-editor">
@@ -3596,7 +4558,7 @@ ${questionListText}`;
             </div>
             
             <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 200px;">
-              <input type="text" class="form-control q-exp-edit ${readonlyClass}" placeholder="AI Explanation (optional)" value="${escapeHTML(q.explanation || '')}" style="padding: 6px 12px; font-size: 0.85rem;" ${readonlyAttr}>
+              <input type="text" class="form-control q-exp-edit" placeholder="AI Explanation (optional)" value="${escapeHTML(q.explanation || '')}" style="padding: 6px 12px; font-size: 0.85rem;">
             </div>
           </div>
         `;
@@ -3709,6 +4671,34 @@ ${questionListText}`;
       showToast("JSON exported successfully.", "success");
     }
 
+    // Import previously exported JSON question set
+    function handleImportSetJSON(e) {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const parsed = JSON.parse(ev.target.result);
+          const list = Array.isArray(parsed) ? parsed : (Array.isArray(parsed?.questions) ? parsed.questions : null);
+          if (!list || list.length === 0) {
+            throw new Error('JSON file does not contain a valid question list.');
+          }
+          resetContinuousMode();
+          questions = mapParsedQuestions(list, 1);
+          buildPreviewEditorList();
+          updatePreviewAnalytics();
+          updateContinuousUI();
+          switchView('setup-view', 'preview-view');
+          showToast(`Imported ${questions.length} questions from "${file.name}".`, 'success');
+        } catch (err) {
+          showToast('Import failed: ' + err.message, 'error');
+        } finally {
+          e.target.value = '';
+        }
+      };
+      reader.readAsText(file);
+    }
+
     // LocalStorage Save & Load last 5 sets
     function handleSaveGeneratedSet() {
       const name = document.getElementById('save-set-name').value.trim();
@@ -3818,7 +4808,11 @@ ${questionListText}`;
       
       userSelections = {};
       flaggedQuestions.clear();
+      questionTimeSpent = {};
       currentQuestionIdx = 0;
+
+      const roughSheet = document.getElementById('exam-rough-sheet');
+      if (roughSheet) roughSheet.value = '';
       
       examStartTime = Date.now();
       
@@ -3892,6 +4886,15 @@ ${questionListText}`;
 
       timerInterval = setInterval(() => {
         if (!isTimerPaused) {
+          // Track per-question time in slider mode
+          const layout = document.getElementById('exam-layout-val')?.value || 'slider';
+          if (layout === 'slider' && questions[currentQuestionIdx]) {
+            const curNum = questions[currentQuestionIdx].questionNumber;
+            questionTimeSpent[curNum] = (questionTimeSpent[curNum] || 0) + 1;
+            const qBadge = document.getElementById('exam-q-time-badge');
+            if (qBadge) qBadge.textContent = `⏱️ ${questionTimeSpent[curNum]}s`;
+          }
+
           if (isUntimed) {
             secondsRemaining++;
             updateDisplay();
@@ -4045,11 +5048,7 @@ Which option is correct, and why? Provide a JSON response: {"correctAnswer": "${
         const responseText = await callAiCompletions(userPrompt, sysPrompt, 2, 500);
         let parsed = null;
         try {
-          let cleanJson = responseText.trim();
-          if (cleanJson.startsWith('```')) {
-            cleanJson = cleanJson.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
-          }
-          parsed = JSON.parse(cleanJson);
+          parsed = extractJsonPayload(responseText);
         } catch(e) {}
 
         loader.classList.add('hidden');
@@ -4136,16 +5135,11 @@ CRITICAL INSTRUCTIONS:
 }
 Ensure the question is accurate and options start with A), B), C), D). Output ONLY the JSON object.`;
 
-        const resultText = await callAiCompletions(prompt, sysPrompt, 3, 1000);
+        const resultText = await callAiCompletions(prompt, sysPrompt, 2, 1000);
+        const parsedRaw = extractJsonPayload(resultText);
+        const parsed = Array.isArray(parsedRaw) ? parsedRaw[0] : parsedRaw;
         
-        let jsonText = resultText.trim();
-        if (jsonText.startsWith('```')) {
-          jsonText = jsonText.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
-        }
-        
-        const parsed = JSON.parse(jsonText);
-        
-        if (!parsed.questionText || !parsed.options) {
+        if (!parsed || !parsed.questionText || !parsed.options) {
           throw new Error("Invalid question structure returned by AI.");
         }
 
@@ -4217,6 +5211,8 @@ Ensure the question is accurate and options start with A), B), C), D). Output ON
         questions,
         userSelections,
         flaggedQuestions: Array.from(flaggedQuestions),
+        questionTimeSpent,
+        markingScheme: document.getElementById('exam-marking-scheme')?.value || 'none',
         secondsRemaining,
         totalExamSeconds,
         examStartTime,
@@ -4252,6 +5248,10 @@ Ensure the question is accurate and options start with A), B), C), D). Output ON
         questions = state.questions;
         userSelections = state.userSelections;
         flaggedQuestions = new Set(state.flaggedQuestions);
+        questionTimeSpent = state.questionTimeSpent || {};
+        if (state.markingScheme && document.getElementById('exam-marking-scheme')) {
+          document.getElementById('exam-marking-scheme').value = state.markingScheme;
+        }
         secondsRemaining = state.secondsRemaining;
         totalExamSeconds = state.totalExamSeconds;
         examStartTime = state.examStartTime;
@@ -4358,7 +5358,9 @@ Ensure the question is accurate and options start with A), B), C), D). Output ON
 
       const sourceInfo = q.sourcePaper ? ` (${escapeHTML(q.sourcePaper)})` : '';
       document.getElementById('exam-q-badge').textContent = `Question ${q.questionNumber}${sourceInfo}`;
-      document.getElementById('exam-q-text').textContent = q.questionText;
+      const qTimeBadge = document.getElementById('exam-q-time-badge');
+      if (qTimeBadge) qTimeBadge.textContent = `⏱️ ${questionTimeSpent[q.questionNumber] || 0}s`;
+      document.getElementById('exam-q-text').innerHTML = formatQuestionHTML(q.questionText);
  
       const flagBtn = document.getElementById('exam-flag-btn');
       if (flaggedQuestions.has(q.questionNumber)) {
@@ -4459,7 +5461,7 @@ Ensure the question is accurate and options start with A), B), C), D). Output ON
             </button>
           </div>
           
-          <div class="question-body-text">${q.questionText}</div>
+          <div class="question-body-text">${formatQuestionHTML(q.questionText)}</div>
           <div class="options-stack">${optionsMarkup}</div>
         `;
 
@@ -4556,7 +5558,6 @@ Ensure the question is accurate and options start with A), B), C), D). Output ON
       if (!q) return;
       
       if (flaggedQuestions.has(q.questionNumber)) {
-        flaggedQuestions.delete(q.number);
         flaggedQuestions.delete(q.questionNumber);
       } else {
         flaggedQuestions.add(q.questionNumber);
@@ -4619,19 +5620,39 @@ Ensure the question is accurate and options start with A), B), C), D). Output ON
       });
 
       const total = questions.length;
-      const percent = total > 0 ? Math.round((correct / total) * 100) : 0;
+      const attempted = correct + incorrect;
+      const accuracy = attempted > 0 ? Math.round((correct / attempted) * 100) : 0;
+
+      const schemeKey = document.getElementById('exam-marking-scheme')?.value || 'none';
+      const scheme = MARKING_SCHEMES[schemeKey] || MARKING_SCHEMES.none;
+      const maxMarks = total * scheme.correct;
+      const negativeDeducted = incorrect * scheme.wrong;
+      const netMarks = (correct * scheme.correct) - negativeDeducted;
+      const fmtNum = (n) => Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/\.?0+$/, '');
+
+      const percent = maxMarks > 0 ? Math.max(0, Math.round((netMarks / maxMarks) * 100)) : 0;
 
       document.getElementById('results-percent').textContent = `${percent}%`;
       document.getElementById('results-fraction').textContent = `${correct} / ${total}`;
       document.getElementById('results-val-correct').textContent = correct;
       document.getElementById('results-val-wrong').textContent = incorrect;
       document.getElementById('results-val-skipped').textContent = skipped;
+      document.getElementById('results-val-accuracy').textContent = `${accuracy}%`;
+      document.getElementById('results-val-marks').textContent = `${fmtNum(netMarks)} / ${fmtNum(maxMarks)}`;
+      document.getElementById('results-lbl-marks').textContent = negativeDeducted > 0
+        ? `Net Score (−${fmtNum(negativeDeducted)} negative)`
+        : scheme.label;
 
       // Time taken calculation
-      const elapsedSecs = Math.round((examEndTime - examStartTime) / 1000);
+      const elapsedSecs = Math.max(0, Math.round((examEndTime - examStartTime) / 1000));
       const mins = Math.floor(elapsedSecs / 60);
       const secs = elapsedSecs % 60;
-      document.getElementById('results-time-spent').textContent = `Time Taken: ${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')} (Limit: ${Math.floor(totalExamSeconds / 60)}:00)`;
+      const limitLabel = totalExamSeconds > 0
+        ? `Limit: ${Math.floor(totalExamSeconds / 60)}:00`
+        : 'Untimed';
+      document.getElementById('results-time-spent').textContent = `Time Taken: ${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')} (${limitLabel})`;
+      const avgSecs = total > 0 ? (elapsedSecs / total).toFixed(1) : '0.0';
+      document.getElementById('results-avg-speed').textContent = `Avg Speed: ${avgSecs}s / question`;
 
       // Set pass/fail banner
       const banner = document.getElementById('results-pass-fail');
@@ -4712,12 +5733,17 @@ Ensure the question is accurate and options start with A), B), C), D). Output ON
         const expBoxDisplay = cachedExplanation ? 'block' : 'none';
 
         const sourceInfo = q.sourcePaper ? ` (${escapeHTML(q.sourcePaper)})` : '';
+        const qSecs = questionTimeSpent[q.questionNumber];
+        const timeTag = qSecs !== undefined ? `<span class="q-time-badge">⏱️ ${qSecs}s</span>` : '';
         card.innerHTML = `
           <div class="question-header-row">
-            <div class="question-number-badge">Question ${q.questionNumber}${sourceInfo}</div>
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <div class="question-number-badge">Question ${q.questionNumber}${sourceInfo}</div>
+              ${timeTag}
+            </div>
             ${headerBadge}
           </div>
-          <div class="question-body-text" style="font-size: 1rem; margin-bottom: 16px;">${escapeHTML(q.questionText)}</div>
+          <div class="question-body-text" style="font-size: 1rem; margin-bottom: 16px;">${formatQuestionHTML(q.questionText)}</div>
           <div class="options-stack" style="margin-bottom: 0;">${optionsMarkup}</div>
           
           <div class="ai-tutor-trigger-row" style="display:flex; justify-content: flex-end; gap: 8px; margin-top: 16px;">
@@ -4937,6 +5963,9 @@ Provide the corrected answer letter if it was wrong, and a concise explanation (
     function handleRetakeExam() {
       userSelections = {};
       flaggedQuestions.clear();
+      questionTimeSpent = {};
+      const roughSheet = document.getElementById('exam-rough-sheet');
+      if (roughSheet) roughSheet.value = '';
       secondsRemaining = totalExamSeconds;
       isTimerPaused = false;
       examStartTime = Date.now();
@@ -4984,6 +6013,9 @@ Provide the corrected answer letter if it was wrong, and a concise explanation (
       questions = [];
       userSelections = {};
       flaggedQuestions.clear();
+      questionTimeSpent = {};
+      const roughSheet = document.getElementById('exam-rough-sheet');
+      if (roughSheet) roughSheet.value = '';
       if (timerInterval) clearInterval(timerInterval);
       if (autoSaveInterval) clearInterval(autoSaveInterval);
       localStorage.removeItem('exam_saved_state');
@@ -5000,35 +6032,15 @@ Provide the corrected answer letter if it was wrong, and a concise explanation (
         updateLifelineButtons();
       }
 
-      // Clear DOM lists and previews
+      // Clear DOM lists and previews (preserve #exam-slider-container structure!)
       const questionsEditList = document.getElementById('questions-edit-list');
       if (questionsEditList) questionsEditList.innerHTML = '';
-      const examSliderContainer = document.getElementById('exam-slider-container');
-      if (examSliderContainer) examSliderContainer.innerHTML = '';
+      const examOptionsStack = document.getElementById('exam-options-stack');
+      if (examOptionsStack) examOptionsStack.innerHTML = '';
+      const examScrollContainer = document.getElementById('exam-scroll-container');
+      if (examScrollContainer) examScrollContainer.innerHTML = '';
       const resultsReviewList = document.getElementById('results-review-list');
       if (resultsReviewList) resultsReviewList.innerHTML = '';
-
-      // Clear files inputs and info labels
-      const qpFile = document.getElementById('qp-file-input');
-      if (qpFile) qpFile.value = '';
-      const akFile = document.getElementById('ak-file-input');
-      if (akFile) akFile.value = '';
-
-      const qpInfo = document.getElementById('qp-file-info');
-      if (qpInfo) {
-        qpInfo.textContent = '';
-        qpInfo.classList.add('hidden');
-      }
-      const akInfo = document.getElementById('ak-file-info');
-      if (akInfo) {
-        akInfo.textContent = '';
-        akInfo.classList.add('hidden');
-      }
-
-      const qpManual = document.getElementById('qp-manual-text');
-      if (qpManual) qpManual.value = '';
-      const akManual = document.getElementById('ak-manual-text');
-      if (akManual) akManual.value = '';
 
       const aiExam = document.getElementById('ai-exam-name');
       if (aiExam) aiExam.value = '';
@@ -5159,10 +6171,14 @@ Provide the corrected answer letter if it was wrong, and a concise explanation (
         return;
       }
       const container = document.getElementById('toast-container');
+      while (container.children.length >= 3) {
+        container.firstElementChild?.remove();
+      }
       const toast = document.createElement('div');
       toast.className = `toast toast-${type}`;
       
-      const icon = type === 'success' ? '✓' : '⚠️';
+      const iconMap = { success: '✓', error: '⚠️', warning: '⚠️', info: 'ℹ️' };
+      const icon = iconMap[type] || 'ℹ️';
       toast.innerHTML = `<span>${icon}</span> <span>${escapeHTML(message)}</span>`;
       
       container.appendChild(toast);
