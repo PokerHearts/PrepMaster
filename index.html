@@ -1244,6 +1244,148 @@
       border: 2px solid var(--warning);
     }
 
+    .nav-box.locked {
+      background: var(--success);
+      color: #ffffff;
+      border-color: var(--success);
+    }
+
+    .nav-box.nav-disabled {
+      opacity: 0.42;
+      cursor: not-allowed;
+    }
+
+    .nav-box.nav-disabled:hover {
+      border-color: var(--border-color);
+      color: inherit;
+    }
+
+    .nav-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: -12px;
+      margin-bottom: 16px;
+    }
+
+    .nav-legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .nav-legend-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 3px;
+      display: inline-block;
+    }
+
+    .q-lock-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 30px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      background: rgba(16, 185, 129, 0.14);
+      color: var(--success);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+    }
+
+    .option-card.locked-option {
+      cursor: not-allowed;
+      opacity: 0.65;
+    }
+
+    .option-card.locked-option:hover {
+      background: var(--bg-primary);
+      border-color: var(--border-color);
+    }
+
+    .option-card.locked-option.selected {
+      opacity: 1;
+      border-color: var(--success);
+      background: rgba(16, 185, 129, 0.12);
+    }
+
+    .option-card.locked-option.selected .option-letter {
+      background: var(--success);
+      border-color: var(--success);
+    }
+
+    .exam-action-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 14px 0 18px;
+      border-top: 1px dashed var(--border-color);
+    }
+
+    .exam-action-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn-warning-outline {
+      background: rgba(245, 158, 11, 0.1);
+      color: var(--warning);
+      border: 1px solid rgba(245, 158, 11, 0.45);
+    }
+
+    .btn-warning-outline:hover:not(:disabled) {
+      background: rgba(245, 158, 11, 0.2);
+      border-color: var(--warning);
+    }
+
+    .exam-rules-box {
+      grid-column: 1 / -1;
+      background: var(--bg-hover);
+      border: var(--card-border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .exam-rules-title {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .exam-rules-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 10px 18px;
+    }
+
+    .exam-rule-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      user-select: none;
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      margin-bottom: 0;
+    }
+
+    .exam-rule-label input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
     /* Question Panel */
     .question-display-card {
       min-height: 380px;
@@ -1946,10 +2088,28 @@
             <label for="exam-marking-scheme">Marking Scheme (Positive / Negative):</label>
             <select id="exam-marking-scheme" class="form-control">
               <option value="1_0">+1 / 0 (No Negative)</option>
+              <option value="1_1">+1 / −1</option>
               <option value="2_1">+2 / −1</option>
               <option value="3_1">+3 / −1</option>
               <option value="4_1">+4 / −1</option>
             </select>
+          </div>
+          <div class="exam-rules-box">
+            <div class="exam-rules-title">Exam Rules &amp; Answer Controls</div>
+            <div class="exam-rules-grid">
+              <label class="exam-rule-label">
+                <input type="checkbox" id="exam-allow-revisit" checked>
+                <span>Allow revisiting previous questions</span>
+              </label>
+              <label class="exam-rule-label">
+                <input type="checkbox" id="exam-allow-change-locked" checked>
+                <span>Allow changing answer after locking</span>
+              </label>
+              <label class="exam-rule-label">
+                <input type="checkbox" id="exam-allow-mark-review" checked>
+                <span>Allow Mark for Review</span>
+              </label>
+            </div>
           </div>
         </div>
 
@@ -1990,6 +2150,11 @@
             <!-- Navigation Grid -->
             <div class="nav-grid-title">Navigator</div>
             <div class="nav-grid" id="exam-nav-grid" style="margin-bottom: 20px;"></div>
+            <div class="nav-legend" aria-hidden="true">
+              <span class="nav-legend-item"><span class="nav-legend-dot" style="background: var(--success);"></span>Locked</span>
+              <span class="nav-legend-item"><span class="nav-legend-dot" style="background: var(--accent-color);"></span>Selected</span>
+              <span class="nav-legend-item"><span class="nav-legend-dot" style="background: transparent; border: 2px solid var(--warning);"></span>Review</span>
+            </div>
 
             <!-- KBC Lifelines Panel -->
             <div id="kbc-lifelines-container" style="margin-bottom: 20px; border-top: 1px dashed var(--border-color); padding-top: 15px;">
@@ -2040,6 +2205,7 @@
               <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                 <div class="question-number-badge" id="exam-q-badge">Question 1</div>
                 <span class="q-time-badge" id="exam-q-time-badge" title="Time spent on this question">⏱️ 0s</span>
+                <span class="q-lock-badge hidden" id="exam-q-lock-badge">🔒 Locked</span>
               </div>
               <button id="exam-flag-btn" class="flag-btn">
                 <svg viewBox="0 0 24 24">
@@ -2052,6 +2218,14 @@
             <div class="question-body-text" id="exam-q-text">Loading question...</div>
 
             <div class="options-stack" id="exam-options-stack"></div>
+
+            <div class="exam-action-bar">
+              <div class="exam-action-group">
+                <button type="button" id="exam-clear-btn" class="btn btn-secondary" style="padding: 8px 14px; font-size: 0.85rem;">Clear Response</button>
+                <button type="button" id="exam-review-next-btn" class="btn btn-warning-outline" style="padding: 8px 14px; font-size: 0.85rem;">🚩 Mark for Review &amp; Next</button>
+              </div>
+              <button type="button" id="exam-lock-next-btn" class="btn btn-success" style="padding: 9px 18px; font-size: 0.88rem; font-weight: 600;">🔒 Lock &amp; Submit Answer</button>
+            </div>
 
             <div class="exam-nav-buttons">
               <button type="button" id="exam-prev-btn" class="btn btn-secondary">
@@ -2067,8 +2241,9 @@
             </div>
             <div class="kbd-hints" aria-hidden="true">
               <span><kbd>A</kbd>–<kbd>D</kbd> or <kbd>1</kbd>–<kbd>4</kbd> Select</span>
+              <span><kbd>Enter</kbd> Lock &amp; Next</span>
               <span><kbd>←</kbd> <kbd>→</kbd> Navigate</span>
-              <span><kbd>F</kbd> Flag</span>
+              <span><kbd>F</kbd> Review</span>
             </div>
           </div>
         </div>
@@ -2309,11 +2484,20 @@
     let questions = []; // Array of Question objects
     let userSelections = {}; // { qNum: letter }
     let flaggedQuestions = new Set(); // Set of flagged qNums
+    let lockedQuestions = new Set(); // Set of locked/submitted qNums
     let questionTimeSpent = {}; // { qNum: seconds }
+
+    // Exam Rules (configured on Review screen before starting)
+    let examRules = {
+      allowRevisit: true,
+      allowChangeAfterLock: true,
+      allowMarkForReview: true
+    };
 
     // Marking Schemes (Positive / Negative)
     const MARKING_SCHEMES = {
       '1_0': { label: '+1 / 0', correct: 1, wrong: 0 },
+      '1_1': { label: '+1 / −1', correct: 1, wrong: 1 },
       '2_1': { label: '+2 / −1', correct: 2, wrong: 1 },
       '3_1': { label: '+3 / −1', correct: 3, wrong: 1 },
       '4_1': { label: '+4 / −1', correct: 4, wrong: 1 }
@@ -3252,13 +3436,19 @@
         const key = e.key.toLowerCase();
         if (key === 'arrowleft') {
           e.preventDefault();
-          navigateSlider(-1);
+          if (examRules.allowRevisit) navigateSlider(-1);
         } else if (key === 'arrowright') {
           e.preventDefault();
           navigateSlider(1);
+        } else if (key === 'enter') {
+          const q = questions[currentQuestionIdx];
+          if (q && userSelections[q.questionNumber]) {
+            e.preventDefault();
+            handleLockAnswerAndNext();
+          }
         } else if (key === 'f') {
           e.preventDefault();
-          toggleQuestionFlagged();
+          if (examRules.allowMarkForReview) toggleQuestionFlagged();
         } else {
           const letterMap = { '1': 'A', '2': 'B', '3': 'C', '4': 'D', 'a': 'A', 'b': 'B', 'c': 'C', 'd': 'D' };
           const letter = letterMap[key];
@@ -3266,6 +3456,11 @@
             const q = questions[currentQuestionIdx];
             const hiddenOpts = questionHiddenOptions[currentQuestionIdx] || [];
             if (q && q.options && q.options[letter] && !hiddenOpts.includes(letter)) {
+              if (lockedQuestions.has(q.questionNumber) && !examRules.allowChangeAfterLock) {
+                e.preventDefault();
+                showToast('Answer is locked and cannot be changed.', 'warning');
+                return;
+              }
               e.preventDefault();
               userSelections[q.questionNumber] = letter;
               renderSliderQuestion();
@@ -3519,6 +3714,9 @@
       document.getElementById('exam-prev-btn').addEventListener('click', () => navigateSlider(-1));
       document.getElementById('exam-next-btn').addEventListener('click', () => navigateSlider(1));
       document.getElementById('exam-flag-btn').addEventListener('click', toggleQuestionFlagged);
+      document.getElementById('exam-clear-btn').addEventListener('click', handleClearCurrentAnswer);
+      document.getElementById('exam-review-next-btn').addEventListener('click', handleMarkReviewAndNext);
+      document.getElementById('exam-lock-next-btn').addEventListener('click', handleLockAnswerAndNext);
       document.getElementById('exam-submit-trigger').addEventListener('click', openSubmitConfirmModal);
       const clearRoughBtn = document.getElementById('rough-sheet-clear-btn');
       if (clearRoughBtn) {
@@ -4737,8 +4935,16 @@ ${questionListText}`;
       }
       isTimerPaused = false;
       
+      // Load exam rules
+      examRules = {
+        allowRevisit: document.getElementById('exam-allow-revisit')?.checked ?? true,
+        allowChangeAfterLock: document.getElementById('exam-allow-change-locked')?.checked ?? true,
+        allowMarkForReview: document.getElementById('exam-allow-mark-review')?.checked ?? true
+      };
+
       userSelections = {};
       flaggedQuestions.clear();
+      lockedQuestions.clear();
       questionTimeSpent = {};
       currentQuestionIdx = 0;
 
@@ -5087,8 +5293,10 @@ Ensure the question is accurate and options start with A), B), C), D). Output ON
         // Replace in questions array
         questions[currentQuestionIdx] = newQ;
         
-        // Clear user selection
+        // Clear user selection & lock state
         delete userSelections[q.questionNumber];
+        lockedQuestions.delete(q.questionNumber);
+        flaggedQuestions.delete(q.questionNumber);
         
         lifelinesUsed.flip = true;
         updateLifelineButtons();
@@ -5123,6 +5331,8 @@ Ensure the question is accurate and options start with A), B), C), D). Output ON
         questions,
         userSelections,
         flaggedQuestions: Array.from(flaggedQuestions),
+        lockedQuestions: Array.from(lockedQuestions),
+        examRules,
         questionTimeSpent,
         markingScheme: document.getElementById('exam-marking-scheme')?.value || '1_0',
         secondsRemaining,
@@ -5159,6 +5369,17 @@ Ensure the question is accurate and options start with A), B), C), D). Output ON
         questions = state.questions;
         userSelections = state.userSelections;
         flaggedQuestions = new Set(state.flaggedQuestions);
+        lockedQuestions = new Set(state.lockedQuestions || []);
+        examRules = Object.assign(
+          { allowRevisit: true, allowChangeAfterLock: true, allowMarkForReview: true },
+          state.examRules || {}
+        );
+        const revisitCb = document.getElementById('exam-allow-revisit');
+        if (revisitCb) revisitCb.checked = examRules.allowRevisit;
+        const changeCb = document.getElementById('exam-allow-change-locked');
+        if (changeCb) changeCb.checked = examRules.allowChangeAfterLock;
+        const reviewCb = document.getElementById('exam-allow-mark-review');
+        if (reviewCb) reviewCb.checked = examRules.allowMarkForReview;
         questionTimeSpent = state.questionTimeSpent || {};
         if (document.getElementById('exam-marking-scheme')) {
           document.getElementById('exam-marking-scheme').value =
@@ -5218,10 +5439,26 @@ Ensure the question is accurate and options start with A), B), C), D). Output ON
         
         // Sync states
         if (idx === currentQuestionIdx) cell.classList.add('current');
-        if (userSelections[q.questionNumber]) cell.classList.add('answered');
-        if (flaggedQuestions.has(q.questionNumber)) cell.classList.add('flagged');
+        if (lockedQuestions.has(q.questionNumber)) {
+          cell.classList.add('locked');
+        } else if (userSelections[q.questionNumber]) {
+          cell.classList.add('answered');
+        }
+        if (examRules.allowMarkForReview && flaggedQuestions.has(q.questionNumber)) {
+          cell.classList.add('flagged');
+        }
+
+        const isNavBlocked = !examRules.allowRevisit && idx !== currentQuestionIdx;
+        if (isNavBlocked) {
+          cell.classList.add('nav-disabled');
+          cell.title = 'Revisiting or jumping between questions is disabled';
+        }
 
         cell.addEventListener('click', () => {
+          if (isNavBlocked) {
+            showToast('Revisiting questions is not permitted in this test.', 'warning');
+            return;
+          }
           currentQuestionIdx = idx;
           renderSliderQuestion();
           buildExamNavGrid();
@@ -5249,19 +5486,36 @@ Ensure the question is accurate and options start with A), B), C), D). Output ON
       const q = questions[currentQuestionIdx];
       if (!q) return;
 
+      const isLocked = lockedQuestions.has(q.questionNumber);
+      const isImmutable = isLocked && !examRules.allowChangeAfterLock;
+
       const sourceInfo = q.sourcePaper ? ` (${escapeHTML(q.sourcePaper)})` : '';
       document.getElementById('exam-q-badge').textContent = `Question ${q.questionNumber}${sourceInfo}`;
       const qTimeBadge = document.getElementById('exam-q-time-badge');
       if (qTimeBadge) qTimeBadge.textContent = `⏱️ ${questionTimeSpent[q.questionNumber] || 0}s`;
+
+      const lockBadge = document.getElementById('exam-q-lock-badge');
+      if (lockBadge) {
+        if (isLocked) {
+          lockBadge.classList.remove('hidden');
+          lockBadge.textContent = isImmutable ? '🔒 Locked (Final)' : '✓ Locked';
+        } else {
+          lockBadge.classList.add('hidden');
+        }
+      }
+
       document.getElementById('exam-q-text').innerHTML = formatQuestionHTML(q.questionText);
  
       const flagBtn = document.getElementById('exam-flag-btn');
-      if (flaggedQuestions.has(q.questionNumber)) {
-        flagBtn.classList.add('active');
-        flagBtn.querySelector('span').textContent = 'Flagged';
-      } else {
-        flagBtn.classList.remove('active');
-        flagBtn.querySelector('span').textContent = 'Flag for Review';
+      if (flagBtn) {
+        flagBtn.classList.toggle('hidden', !examRules.allowMarkForReview);
+        if (flaggedQuestions.has(q.questionNumber)) {
+          flagBtn.classList.add('active');
+          flagBtn.querySelector('span').textContent = 'Flagged';
+        } else {
+          flagBtn.classList.remove('active');
+          flagBtn.querySelector('span').textContent = 'Flag for Review';
+        }
       }
  
       const stack = document.getElementById('exam-options-stack');
@@ -5272,6 +5526,9 @@ Ensure the question is accurate and options start with A), B), C), D). Output ON
       Object.entries(q.options || {}).forEach(([letter, text]) => {
         const card = document.createElement('div');
         card.className = 'option-card';
+        if (isImmutable) {
+          card.classList.add('locked-option');
+        }
         if (hiddenOpts.includes(letter)) {
           card.style.visibility = 'hidden';
           card.style.pointerEvents = 'none';
@@ -5286,17 +5543,27 @@ Ensure the question is accurate and options start with A), B), C), D). Output ON
         `;
 
         card.addEventListener('click', () => {
+          if (isImmutable) {
+            showToast('Answer is locked and cannot be changed.', 'warning');
+            return;
+          }
           userSelections[q.questionNumber] = letter;
           stack.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
           card.classList.add('selected');
           updateExamProgress();
           buildExamNavGrid();
+          updateActionButtonsState();
         });
 
         stack.appendChild(card);
       });
 
-      document.getElementById('exam-prev-btn').disabled = currentQuestionIdx === 0;
+      const prevBtn = document.getElementById('exam-prev-btn');
+      if (prevBtn) {
+        prevBtn.disabled = currentQuestionIdx === 0 || !examRules.allowRevisit;
+        prevBtn.title = !examRules.allowRevisit ? 'Revisiting previous questions is disabled' : '';
+      }
+
       const nextBtn = document.getElementById('exam-next-btn');
       if (continuousMode && !continuousStopped) {
         if (continuousGenerating && currentQuestionIdx === questions.length - 1) {
@@ -5313,6 +5580,88 @@ Ensure the question is accurate and options start with A), B), C), D). Output ON
         nextBtn.disabled = false;
         nextBtn.innerHTML = `Next <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>`;
       }
+
+      updateActionButtonsState();
+    }
+
+    function updateActionButtonsState() {
+      const q = questions[currentQuestionIdx];
+      if (!q) return;
+
+      const hasSelection = !!userSelections[q.questionNumber];
+      const isLocked = lockedQuestions.has(q.questionNumber);
+      const isImmutable = isLocked && !examRules.allowChangeAfterLock;
+      const isLast = currentQuestionIdx === questions.length - 1 && !(continuousMode && !continuousStopped);
+
+      const clearBtn = document.getElementById('exam-clear-btn');
+      if (clearBtn) {
+        clearBtn.disabled = !hasSelection || isImmutable;
+      }
+
+      const reviewNextBtn = document.getElementById('exam-review-next-btn');
+      if (reviewNextBtn) {
+        reviewNextBtn.classList.toggle('hidden', !examRules.allowMarkForReview);
+        reviewNextBtn.textContent = isLast ? '🚩 Mark for Review' : '🚩 Mark for Review & Next';
+      }
+
+      const lockNextBtn = document.getElementById('exam-lock-next-btn');
+      if (lockNextBtn) {
+        if (isImmutable) {
+          lockNextBtn.textContent = isLast ? '✓ Final Answer Locked' : '✓ Locked — Next';
+        } else if (isLocked) {
+          lockNextBtn.textContent = isLast ? '✓ Update Final Answer' : '✓ Save & Next';
+        } else {
+          lockNextBtn.textContent = isLast ? '🔒 Lock Final Answer' : '🔒 Lock & Submit Answer';
+        }
+      }
+    }
+
+    function handleClearCurrentAnswer() {
+      const q = questions[currentQuestionIdx];
+      if (!q) return;
+      if (lockedQuestions.has(q.questionNumber) && !examRules.allowChangeAfterLock) {
+        showToast('Answer is locked and cannot be cleared.', 'warning');
+        return;
+      }
+      delete userSelections[q.questionNumber];
+      lockedQuestions.delete(q.questionNumber);
+      renderSliderQuestion();
+      buildExamNavGrid();
+      updateExamProgress();
+    }
+
+    function handleMarkReviewAndNext() {
+      if (!examRules.allowMarkForReview) return;
+      const q = questions[currentQuestionIdx];
+      if (!q) return;
+      flaggedQuestions.add(q.questionNumber);
+      renderSliderQuestion();
+      buildExamNavGrid();
+      saveActiveExamState(true);
+      if (currentQuestionIdx < questions.length - 1 || (continuousMode && !continuousStopped)) {
+        navigateSlider(1);
+      }
+    }
+
+    function handleLockAnswerAndNext() {
+      const q = questions[currentQuestionIdx];
+      if (!q) return;
+      const isImmutable = lockedQuestions.has(q.questionNumber) && !examRules.allowChangeAfterLock;
+      if (isImmutable) {
+        navigateSlider(1);
+        return;
+      }
+      if (!userSelections[q.questionNumber]) {
+        showToast('Select an option first to lock & submit as final.', 'warning');
+        return;
+      }
+      lockedQuestions.add(q.questionNumber);
+      flaggedQuestions.delete(q.questionNumber);
+      renderSliderQuestion();
+      buildExamNavGrid();
+      updateExamProgress();
+      saveActiveExamState(true);
+      navigateSlider(1);
     }
 
     // Touch Swipe Gestures for Mobile Slider
@@ -5344,6 +5693,10 @@ Ensure the question is accurate and options start with A), B), C), D). Output ON
     }
 
     function navigateSlider(direction) {
+      if (direction < 0 && !examRules.allowRevisit) {
+        showToast('Revisiting previous questions is disabled.', 'warning');
+        return;
+      }
       const next = currentQuestionIdx + direction;
       if (next >= 0 && next < questions.length) {
         currentQuestionIdx = next;
@@ -5372,6 +5725,7 @@ Ensure the question is accurate and options start with A), B), C), D). Output ON
     }
 
     function toggleQuestionFlagged() {
+      if (!examRules.allowMarkForReview) return;
       const q = questions[currentQuestionIdx];
       if (!q) return;
       
@@ -5781,6 +6135,7 @@ Provide the corrected answer letter if it was wrong, and a concise explanation (
     function handleRetakeExam() {
       userSelections = {};
       flaggedQuestions.clear();
+      lockedQuestions.clear();
       questionTimeSpent = {};
       const roughSheet = document.getElementById('exam-rough-sheet');
       if (roughSheet) roughSheet.value = '';
@@ -5824,6 +6179,7 @@ Provide the corrected answer letter if it was wrong, and a concise explanation (
       questions = [];
       userSelections = {};
       flaggedQuestions.clear();
+      lockedQuestions.clear();
       questionTimeSpent = {};
       const roughSheet = document.getElementById('exam-rough-sheet');
       if (roughSheet) roughSheet.value = '';
