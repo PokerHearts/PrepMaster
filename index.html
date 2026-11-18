@@ -2431,10 +2431,10 @@
         authPrefix: 'Bearer ',
         headers: '{\n  "Content-Type": "application/json"\n}',
         models: [
-          { value: 'llama-3.3-70b-versatile', label: 'llama-3.3-70b-versatile (Recommended)' },
-          { value: 'llama-3.1-8b-instant', label: 'llama-3.1-8b-instant (Ultra-Fast)' },
-          { value: 'qwen/qwen3-32b', label: 'qwen/qwen3-32b' },
-          { value: 'openai/gpt-oss-120b', label: 'openai/gpt-oss-120b' }
+          { value: 'openai/gpt-oss-120b', label: 'openai/gpt-oss-120b (Recommended)' },
+          { value: 'qwen/qwen3.8-27b', label: 'qwen/qwen3.8-27b (Fast & Accurate)' },
+          { value: 'openai/gpt-oss-20b', label: 'openai/gpt-oss-20b (Ultra-Fast)' },
+          { value: 'llama-3.3-70b-versatile', label: 'llama-3.3-70b-versatile' }
         ]
       },
       openrouter: {
@@ -2737,25 +2737,29 @@
         select.appendChild(opt);
       }
 
-      const curatedGroup = liveModels.length > 0 ? document.createElement('optgroup') : select;
-      if (liveModels.length > 0) curatedGroup.label = 'Recommended';
-
-      const curatedIds = new Set();
-      preset.models.forEach(modelOpt => {
-        curatedIds.add(modelOpt.value);
-        const opt = document.createElement('option');
-        opt.value = modelOpt.value;
-        opt.textContent = modelOpt.label;
-        curatedGroup.appendChild(opt);
-      });
-      if (liveModels.length > 0) select.appendChild(curatedGroup);
-
       if (liveModels.length > 0) {
-        const extraModels = liveModels.filter(m => !curatedIds.has(m));
-        if (extraModels.length > 0) {
+        // Only show verified models actually returned by this API key!
+        const liveSet = new Set(liveModels);
+        const matchingCurated = preset.models.filter(m => liveSet.has(m.value));
+        const curatedIds = new Set(matchingCurated.map(m => m.value));
+        const otherLive = liveModels.filter(id => !curatedIds.has(id));
+
+        if (matchingCurated.length > 0) {
+          const recGroup = document.createElement('optgroup');
+          recGroup.label = 'Recommended (Verified)';
+          matchingCurated.forEach(modelOpt => {
+            const opt = document.createElement('option');
+            opt.value = modelOpt.value;
+            opt.textContent = modelOpt.label;
+            recGroup.appendChild(opt);
+          });
+          select.appendChild(recGroup);
+        }
+
+        if (otherLive.length > 0) {
           const liveGroup = document.createElement('optgroup');
-          liveGroup.label = `Available on Your Key (${extraModels.length})`;
-          extraModels.forEach(modelId => {
+          liveGroup.label = `Available on Your Key (${otherLive.length})`;
+          otherLive.forEach(modelId => {
             const opt = document.createElement('option');
             opt.value = modelId;
             opt.textContent = modelId;
@@ -2763,6 +2767,13 @@
           });
           select.appendChild(liveGroup);
         }
+      } else {
+        preset.models.forEach(modelOpt => {
+          const opt = document.createElement('option');
+          opt.value = modelOpt.value;
+          opt.textContent = modelOpt.label;
+          select.appendChild(opt);
+        });
       }
 
       const allOptions = Array.from(select.options).map(o => o.value);
@@ -3069,7 +3080,7 @@
           } else if (Array.isArray(data.data)) {
             fetchedModels = data.data
               .map(m => m.id)
-              .filter(id => id && !/embedding|whisper|tts|dall-e|moderation|audio|realtime|sora|transcribe|guard/i.test(id))
+              .filter(id => id && !/embedding|whisper|tts|dall-e|moderation|audio|realtime|sora|transcribe|guard|safeguard|playai|orpheus/i.test(id))
               .slice(0, 80);
           }
 
@@ -3077,6 +3088,7 @@
             liveProviderModels[presetKey] = fetchedModels;
             if (!fromModal || presetKey === preferences.preset) {
               populateModelSelect(presetKey, preferences.modelChoice);
+              savePreferences();
             }
           }
         } else {
@@ -3108,8 +3120,9 @@
           }
         }
 
+        const activeModelNote = preferences.modelChoice ? ` — using ${preferences.modelChoice}` : '';
         const successSummary = fetchedModels.length > 0
-          ? `Connected (${fetchedModels.length} models synced)`
+          ? `Connected (${fetchedModels.length} models synced${activeModelNote})`
           : 'Key Verified ✓';
         setApiStatus('ok', '✓ ' + (fetchedModels.length > 0 ? `${fetchedModels.length} models synced` : 'Connected'));
         if (fromModal && modalResult) {
@@ -4202,6 +4215,9 @@ Output ONLY the valid JSON array.`;
           err.noRetry = response.status >= 400 && response.status < 500 && response.status !== 429 && response.status !== 408;
           if (response.status === 401 || response.status === 403) {
             setApiStatus('err', `✗ Auth Error (${response.status})`);
+          } else if (response.status === 404 && preset.modelsEndpoint) {
+            // Auto-sync live models so dropdown switches away from inaccessible/retired model
+            testApiConnection({ fromModal: false });
           }
           throw err;
         }
